@@ -15,5 +15,5 @@ void loop() {
     int val = analogRead(SIGNAL);
     Serial.println(val);
   }
-  delay(50); // ≈250 muestras por segundo
+  delay(50);
 }
