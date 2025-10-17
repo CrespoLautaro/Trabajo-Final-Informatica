@@ -1,20 +1,19 @@
+#define LOMENOS 11
+#define LOMAS 10
+#define SIGNAL A0
+
 void setup() {
-// initialize the serial communication:
-Serial.begin(9600);
-pinMode(10, INPUT); // Setup for leads off detection LO +
-pinMode(11, INPUT); // Setup for leads off detection LO -
- 
+  Serial.begin(9600);
+  pinMode(LOMENOS, INPUT);
+  pinMode(LOMAS, INPUT);
 }
- 
+
 void loop() {
- 
-if((digitalRead(10) == 1)||(digitalRead(11) == 1)){
-Serial.println('!');
-}
-else{
-// send the value of analog input 0:
-Serial.println(analogRead(A0));
-}
-//Wait for a bit to keep serial data from saturating
-delay(50);
+  if (digitalRead(LOMENOS) == HIGH || digitalRead(LOMAS) == HIGH) {
+    Serial.println(512); // línea base cuando no hay contacto
+  } else {
+    int val = analogRead(SIGNAL);
+    Serial.println(val);
+  }
+  delay(50); // ≈250 muestras por segundo
 }
