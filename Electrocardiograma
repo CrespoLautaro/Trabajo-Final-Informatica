@@ -1,19 +1,63 @@
 #define LOMENOS 11
 #define LOMAS 10
 #define SIGNAL A0
+const int PULSADOR1 = 2;
+const int PULSADOR2 = 3;
+const int PULSADOR3 = 4;
+// defino esstados 
+enum Estado {INICIO_MEDICION, REINICIAR_MEDICION, FIN_MEDICION};
 
 void setup() {
   Serial.begin(9600);
+  pinMode(PULSADOR1, INPUT);
+  pinMode(PULSADOR2, INPUT);
+  pinMode(PULSADOR3, INPUT);
   pinMode(LOMENOS, INPUT);
   pinMode(LOMAS, INPUT);
 }
 
 void loop() {
+
+  if (digitalRead(PULSADOR1) == HIGH) {
+    estadoActual = INICIO_MEDICION;
+  } 
+    if (digitalRead(PULSADOR2) == HIGH) {
+    estadoActual = REINICIAR_MEDICION;
+  } 
+    if (digitalRead(PULSADOR3) == HIGH) {
+    estadoActual = FIN_MEDICION;
+  } 
+
+
   if (digitalRead(LOMENOS) == HIGH || digitalRead(LOMAS) == HIGH) {
-    Serial.println(512); // línea base cuando no hay contacto
+    Serial.println(advertencia); // línea base cuando no hay contacto
   } else {
     int val = analogRead(SIGNAL);
     Serial.println(val);
   }
-  delay(50);
+  delay(50); 
+
+  switch (estadoActual) {
+    case INICIO_MEDICION:
+     
+      break;
+
+    case REINICIAR_MEDICION:
+      if () {
+        
+      }
+      
+      break;
+
+    case FIN_MEDICION:
+      if () {
+        
+      }
+     
+      break;
+      
+
+  }
+
+
 }
