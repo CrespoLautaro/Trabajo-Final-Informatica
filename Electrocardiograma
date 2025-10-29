@@ -4,14 +4,16 @@
 const int PULSADOR1 = 2;
 const int PULSADOR2 = 3;
 const int PULSADOR3 = 4;
-// defino esstados 
+const int TAMANIO_DE_MEMORIA = 750;
+int ECG_Almacenamiento[TAMANIO_DE_MEMORIA];
+int Posicion = 0;
+
 enum Estado {INICIO_MEDICION, REINICIAR_MEDICION, GUARDAR_MEDICION, ERROR_MEDICION, INICIO};
 Estado estadoActual = INICIO;
-String inputString = "";         // a string to hold incoming data
-boolean stringComplete = false;  // whether the string is complete
+String inputString = "";
+boolean stringComplete = false;
 float Retardo_medicion = 50;
 float TiempoAnterior=0;
-
 
 void setup() {
   Serial.begin(9600);
@@ -24,74 +26,74 @@ void setup() {
 }
 
 void loop() {
-
- //Recibe comandos Seriales
-  if (stringComplete)   {
-    if (inputString == "M") 
-    {   
+  // Comandos Seriales
+  if (stringComplete) {
+    if (inputString == "M") {
       Serial.println("Iniciando Medicion");
       estadoActual = INICIO_MEDICION;
-      }
-
-    if (inputString == "R") 
-    {   
+    } else if (inputString == "R") {
       Serial.println("Reiniciando Medicion");
       estadoActual = REINICIAR_MEDICION;
-    }
-
-    if (inputString == "G") 
-    {   
+    } else if (inputString == "G") {
       Serial.println("Guardando Medicion");
       estadoActual = GUARDAR_MEDICION;
     }
     inputString = "";
     stringComplete = false;
-    }
+  }
 
- //Funcionamiento pulsadores
-  if (digitalRead(PULSADOR1) == HIGH) {
-    Serial.println("M");
- } 
-    if (digitalRead(PULSADOR2) == HIGH) {
-    Serial.println("R");
-  } 
-    if (digitalRead(PULSADOR3) == HIGH) {
-   Serial.println("G");
-  } 
+  // Pulsadores → comandos
+  if (digitalRead(PULSADOR1) == HIGH) Serial.println("M");
+  if (digitalRead(PULSADOR2) == HIGH) Serial.println("R");
+  if (digitalRead(PULSADOR3) == HIGH) Serial.println("G");
 
-
-    
-
-   float TiempoActual = millis();                //"Retardo" de la medicion
-   if(TiempoActual - TiempoAnterior >= Retardo_medicion ){
+  float TiempoActual = millis();
+  if (TiempoActual - TiempoAnterior >= Retardo_medicion) {
     TiempoAnterior = TiempoActual;
 
     switch (estadoActual) {
-    case INICIO_MEDICION:
-      //Deteccion de electrodos desconectados
-  if (digitalRead(LOMENOS) == HIGH || digitalRead(LOMAS) == HIGH) {
-    Serial.println("advertencia"); 
+      case INICIO_MEDICION:
+        if (digitalRead(LOMENOS) == HIGH || digitalRead(LOMAS) == HIGH) {
+          Serial.println("advertencia");
+        } else {
+          int Medicion = analogRead(SIGNAL);
+          ECG_Almacenamiento[Posicion] = Medicion;
+          Posicion++;
 
-  } else {
-    int med = analogRead(SIGNAL);
-    Serial.println(med);
-     break;
-    }}
- 
-  }
-}
+          if (Posicion >= TAMANIO_DE_MEMORIA) {
+            // Enviar datos
+            Serial.print('<');
+            for (int i = 0; i < TAMANIO_DE_MEMORIA; i++) {
+              Serial.print(ECG_Almacenamiento[i]);
+              if (i < TAMANIO_DE_MEMORIA - 1) Serial.print(',');
+            }
+            Serial.println(">");
+            Posicion = 0;
+          }
+        }
+        break;
 
+      case REINICIAR_MEDICION:
+        Posicion = 0;
+        Serial.println("Medicion reiniciada");
+        estadoActual = INICIO;
+        break;
 
-void serialEvent() {
-  while (Serial.available()) 
-  {
-    char inChar = (char)Serial.read();
-     if (inChar != '\n') {
-      inputString += inChar;
-     }
-    else if (inChar == '\n') {
-      stringComplete = true;
+      case GUARDAR_MEDICION:
+        Serial.println("Guardando datos...");
+        estadoActual = INICIO;
+        break;
+
+      default:
+        break;
     }
   }
 }
 
+void serialEvent() {
+  while (Serial.available()) {
+    char inChar = (char)Serial.read();
+    if (inChar != '\n') inputString += inChar;
+    else stringComplete = true;
+  }
+}
