@@ -5,10 +5,17 @@ const int PULSADOR1 = 2;
 const int PULSADOR2 = 3;
 const int PULSADOR3 = 4;
 // defino esstados 
-enum Estado {INICIO_MEDICION, REINICIAR_MEDICION, FIN_MEDICION};
+enum Estado {INICIO_MEDICION, REINICIAR_MEDICION, GUARDAR_MEDICION, ERROR_MEDICION, INICIO};
+Estado estadoActual = INICIO;
+String inputString = "";         // a string to hold incoming data
+boolean stringComplete = false;  // whether the string is complete
+float Retardo_medicion = 50;
+float TiempoAnterior=0;
+
 
 void setup() {
   Serial.begin(9600);
+  inputString.reserve(200);
   pinMode(PULSADOR1, INPUT);
   pinMode(PULSADOR2, INPUT);
   pinMode(PULSADOR3, INPUT);
@@ -18,46 +25,73 @@ void setup() {
 
 void loop() {
 
+ //Recibe comandos Seriales
+  if (stringComplete)   {
+    if (inputString == "M") 
+    {   
+      Serial.println("Iniciando Medicion");
+      estadoActual = INICIO_MEDICION;
+      }
+
+    if (inputString == "R") 
+    {   
+      Serial.println("Reiniciando Medicion");
+      estadoActual = REINICIAR_MEDICION;
+    }
+
+    if (inputString == "G") 
+    {   
+      Serial.println("Guardando Medicion");
+      estadoActual = GUARDAR_MEDICION;
+    }
+    inputString = "";
+    stringComplete = false;
+    }
+
+ //Funcionamiento pulsadores
   if (digitalRead(PULSADOR1) == HIGH) {
-    estadoActual = INICIO_MEDICION;
-  } 
+    Serial.println("M");
+ } 
     if (digitalRead(PULSADOR2) == HIGH) {
-    estadoActual = REINICIAR_MEDICION;
+    Serial.println("R");
   } 
     if (digitalRead(PULSADOR3) == HIGH) {
-    estadoActual = FIN_MEDICION;
+   Serial.println("G");
   } 
 
 
-  if (digitalRead(LOMENOS) == HIGH || digitalRead(LOMAS) == HIGH) {
-    Serial.println(advertencia); // línea base cuando no hay contacto
-  } else {
-    int val = analogRead(SIGNAL);
-    Serial.println(val);
-  }
-  delay(50); 
+    
 
-  switch (estadoActual) {
+   float TiempoActual = millis();                //"Retardo" de la medicion
+   if(TiempoActual - TiempoAnterior >= Retardo_medicion ){
+    TiempoAnterior = TiempoActual;
+
+    switch (estadoActual) {
     case INICIO_MEDICION:
-     
-      break;
+      //Deteccion de electrodos desconectados
+  if (digitalRead(LOMENOS) == HIGH || digitalRead(LOMAS) == HIGH) {
+    Serial.println("advertencia"); 
 
-    case REINICIAR_MEDICION:
-      if () {
-        
-      }
-      
-      break;
-
-    case FIN_MEDICION:
-      if () {
-        
-      }
-     
-      break;
-      
-
+  } else {
+    int med = analogRead(SIGNAL);
+    Serial.println(med);
+     break;
+    }}
+ 
   }
-
-
 }
+
+
+void serialEvent() {
+  while (Serial.available()) 
+  {
+    char inChar = (char)Serial.read();
+     if (inChar != '\n') {
+      inputString += inChar;
+     }
+    else if (inChar == '\n') {
+      stringComplete = true;
+    }
+  }
+}
+
