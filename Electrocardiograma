@@ -16,84 +16,94 @@ float Retardo_medicion = 50;
 float TiempoAnterior=0;
 
 void setup() {
-  Serial.begin(9600);
-  inputString.reserve(200);
-  pinMode(PULSADOR1, INPUT);
-  pinMode(PULSADOR2, INPUT);
-  pinMode(PULSADOR3, INPUT);
-  pinMode(LOMENOS, INPUT);
-  pinMode(LOMAS, INPUT);
+Serial.begin(9600);
+inputString.reserve(200);
+pinMode(PULSADOR1, INPUT);
+pinMode(PULSADOR2, INPUT);
+pinMode(PULSADOR3, INPUT);
+pinMode(LOMENOS, INPUT);
+pinMode(LOMAS, INPUT);
 }
 
 void loop() {
-  // Comandos Seriales
-  if (stringComplete) {
-    if (inputString == "M") {
-      Serial.println("Iniciando Medicion");
-      estadoActual = INICIO_MEDICION;
-    } else if (inputString == "R") {
-      Serial.println("Reiniciando Medicion");
-      estadoActual = REINICIAR_MEDICION;
-    } else if (inputString == "G") {
-      Serial.println("Guardando Medicion");
-      estadoActual = GUARDAR_MEDICION;
-    }
-    inputString = "";
-    stringComplete = false;
-  }
+// Comandos Seriales
+if (stringComplete) {
+if (inputString == "M") {
+Serial.println("Iniciando Medicion");
+estadoActual = INICIO_MEDICION;
+} else if (inputString == "R") {
+Serial.println("Reiniciando Medicion");
+estadoActual = REINICIAR_MEDICION;
+} else if (inputString == "G") {
+Serial.println("Guardando Medicion");
+estadoActual = GUARDAR_MEDICION;
+}
+inputString = "";
+stringComplete = false;
+}
 
-  // Pulsadores → comandos
-  if (digitalRead(PULSADOR1) == HIGH) Serial.println("M");
-  if (digitalRead(PULSADOR2) == HIGH) Serial.println("R");
-  if (digitalRead(PULSADOR3) == HIGH) Serial.println("G");
+// Pulsadores → comandos
+if (digitalRead(PULSADOR1) == HIGH)
+{
+// Serial.println("M");
+estadoActual = INICIO_MEDICION;
+}
 
-  float TiempoActual = millis();
-  if (TiempoActual - TiempoAnterior >= Retardo_medicion) {
-    TiempoAnterior = TiempoActual;
+if (digitalRead(PULSADOR2) == HIGH){
+estadoActual = REINICIAR_MEDICION;
+// Serial.println("R");
+}
+if (digitalRead(PULSADOR3) == HIGH){
+estadoActual = GUARDAR_MEDICION;
+//Serial.println("G");
+}
 
-    switch (estadoActual) {
-      case INICIO_MEDICION:
-        if (digitalRead(LOMENOS) == HIGH || digitalRead(LOMAS) == HIGH) {
-          Serial.println("advertencia");
-        } else {
-          int Medicion = analogRead(SIGNAL);
-          ECG_Almacenamiento[Posicion] = Medicion;
-          Posicion++;
+float TiempoActual = millis();
+if (TiempoActual - TiempoAnterior >= Retardo_medicion) {
+TiempoAnterior = TiempoActual;
 
-          if (Posicion >= TAMANIO_DE_MEMORIA) {
-            // Enviar datos
-            Serial.print('<');
-            for (int i = 0; i < TAMANIO_DE_MEMORIA; i++) {
-              Serial.print(ECG_Almacenamiento[i]);
-              if (i < TAMANIO_DE_MEMORIA - 1) Serial.print(',');
-            }
-            Serial.println(">");
-            Posicion = 0;
-          }
-        }
-        break;
+switch (estadoActual) {
+case INICIO_MEDICION:
+if (digitalRead(LOMENOS) == HIGH || digitalRead(LOMAS) == HIGH) {
+Serial.println("advertencia");
+} else {
+int Medicion = analogRead(SIGNAL);
+ECG_Almacenamiento[Posicion] = Medicion;
+Posicion++;
 
-      case REINICIAR_MEDICION:
-        Posicion = 0;
-        Serial.println("Medicion reiniciada");
-        estadoActual = INICIO;
-        break;
+if (Posicion >= TAMANIO_DE_MEMORIA) {
+// Enviar datos
+Serial.print('<');
+for (int i = 0; i < TAMANIO_DE_MEMORIA; i++) {
+Serial.print(ECG_Almacenamiento[i]);
+if (i < TAMANIO_DE_MEMORIA - 1) Serial.print(',');
+}
+Serial.println(">");
+Posicion = 0;
+}
+}
+break;
 
-      case GUARDAR_MEDICION:
-        Serial.println("Guardando datos...");
-        estadoActual = INICIO;
-        break;
+case REINICIAR_MEDICION:
+Posicion = 0;
+Serial.println("Medicion reiniciada");
+estadoActual = INICIO;
+break;
 
-      default:
-        break;
-    }
-  }
+case GUARDAR_MEDICION:
+estadoActual = INICIO;
+break;
+
+default:
+break;
+}
+}
 }
 
 void serialEvent() {
-  while (Serial.available()) {
-    char inChar = (char)Serial.read();
-    if (inChar != '\n') inputString += inChar;
-    else stringComplete = true;
-  }
+while (Serial.available()) {
+char inChar = (char)Serial.read();
+if (inChar != '\n') inputString += inChar;
+else stringComplete = true;
+}
 }
