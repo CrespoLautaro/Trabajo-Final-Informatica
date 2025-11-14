@@ -5,7 +5,7 @@
 const int PULSADOR1 = 2; //Iniciar
 const int PULSADOR2 = 3; //Reiniciar
 const int PULSADOR3 = 4; //Guardar
-const int TAM_DE_MEMORIA = 50;
+const int TAM_DE_MEMORIA = 300;
 
 //Variables globales
 int ECG_Almacenamiento[TAM_DE_MEMORIA];
