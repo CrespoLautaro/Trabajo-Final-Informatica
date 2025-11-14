@@ -1,66 +1,58 @@
-// --- Definiciones y pines ---
+//Definiciones y pines
 #define LOMENOS 11
 #define LOMAS 10
 #define SIGNAL A0
-const int PULSADOR1 = 2; // Iniciar
-const int PULSADOR2 = 3; // Reiniciar
-const int PULSADOR3 = 4; // Guardar
+const int PULSADOR1 = 2; //Iniciar
+const int PULSADOR2 = 3; //Reiniciar
+const int PULSADOR3 = 4; //Guardar
 const int TAM_DE_MEMORIA = 50;
 
-// --- Variables Globales ---
+//Variables globales
 int ECG_Almacenamiento[TAM_DE_MEMORIA];
 int Posicion = 0;
 String inputString = "";
 boolean stringComplete = false;
-float Retardo_medicion = 50; // 50ms por muestra (20 Hz)
+float Retardo_medicion = 50; //50ms de muestra(20 Hz)
 float TiempoAnterior = 0;
 
-// Máquina de Estados de Arduino
+//Maquina de estados de arduino
 enum Estado {
-  INICIO_MEDICION,    // Estado temporal para chequear y enviar "IM"
+  INICIO_MEDICION,    //Estado temporal para chequear y enviar "IM
   REINICIAR_MEDICION, 
   GUARDAR_MEDICION, 
-  MIDIENDO_ACTIVA,    // ¡NUEVO ESTADO! Para tomar muestras
-  INICIO              // Estado de reposo
+  MIDIENDO_ACTIVA,    //Estado para tomar muestras
+  INICIO              //Estado de reposo
 };
 Estado estadoActual = INICIO;
 
-// Variables Anti-rebote para los botones
-int ultimoPULSADOR1 = HIGH; // Inicia en HIGH porque usamos INPUT_PULLUP
+//Variables anti-rebote para los pulsadore
+//Arrancan en HIGH porque usamos INPUT_PULLUP
+int ultimoPULSADOR1 = HIGH; 
 int ultimoPULSADOR2 = HIGH;
 int ultimoPULSADOR3 = HIGH;
 
-// =======================================================
-//  SETUP
-// =======================================================
+//setup
 void setup() {
   Serial.begin(9600);
   inputString.reserve(200);
-
-  // --- CONFIGURACIÓN DE PINES ---
-  // Usamos INPUT_PULLUP para todos los botones y entradas de detección.
-  // Esto significa que el pin está en HIGH (1) por defecto.
-  // Cuando se presiona el botón o se conecta el electrodo, el pin es "jalado" a LOW (0).
   
-  // Botones
+  //Pulsadores
   pinMode(PULSADOR1, INPUT); 
   pinMode(PULSADOR2, INPUT);
   pinMode(PULSADOR3, INPUT);
   
-  // Detección de Electrodos (Leads-Off)
+  //Deteccion de electrodos
   pinMode(LOMENOS, INPUT);   
   pinMode(LOMAS, INPUT);
   
-  // Pin de señal (Analógico)
+  //Pin de señal (Analogico)
   pinMode(SIGNAL, INPUT); 
 }
 
-// =======================================================
-//  LOOP PRINCIPAL
-// =======================================================
+//Loop
 void loop() {
   
-  // --- Comandos Seriales (desde Processing) ---
+  //Comandos seriales (desde processing)
   if (stringComplete) {
     if (inputString == "IM") {
       estadoActual = INICIO_MEDICION;
@@ -73,74 +65,69 @@ void loop() {
     stringComplete = false;
   }
 
-  
-  // --- Pulsadores Físicos (Lógica Anti-rebote para INPUT_PULLUP) ---
-
+  //Pulsadores fisicos
   int actualPULSADOR1 = digitalRead(PULSADOR1);
   int actualPULSADOR2 = digitalRead(PULSADOR2);
   int actualPULSADOR3 = digitalRead(PULSADOR3);
 
-  // Comprobar PULSADOR1 (INICIAR)
-  // Busca un flanco descendente (de HIGH a LOW)
+  //Comprobar el Pulsador 1 (Iniciar)
   if (actualPULSADOR1 == LOW && ultimoPULSADOR1 == HIGH) {
     estadoActual = INICIO_MEDICION;
-    delay(50); // Anti-rebote
+    delay(50); 
   }
 
-  // Comprobar PULSADOR2 (REINICIAR)
+  //Comprobar el Pulsador 2 (Reiniciar)
   if (actualPULSADOR2 == LOW && ultimoPULSADOR2 == HIGH) {
     estadoActual = REINICIAR_MEDICION;
     delay(50); 
   }
 
-  // Comprobar PULSADOR3 (GUARDAR)
+  //Comprobar el Pulsador 3 (Guardar)
   if (actualPULSADOR3 == LOW && ultimoPULSADOR3 == HIGH) {
     estadoActual = GUARDAR_MEDICION;
     delay(50); 
   }
 
-  // Guardar estado actual para la próxima iteración
+  //Guarda el estado actual para la próxima interación
   ultimoPULSADOR1 = actualPULSADOR1;
   ultimoPULSADOR2 = actualPULSADOR2;
   ultimoPULSADOR3 = actualPULSADOR3;
 
 
-  // --- Temporizador y Máquina de Estados (se ejecuta cada 50ms) ---
+  //Temporizador y maquina de Estados
   float TiempoActual = millis();
   if (TiempoActual - TiempoAnterior >= Retardo_medicion) {
     TiempoAnterior = TiempoActual;
 
     switch (estadoActual) {
-
-      // ESTADO 1: INICIO MEDICIÓN (Chequeo)
-      // Estado temporal que solo chequea los electrodos y pasa al siguiente estado.
+      
+      //ESTADO 1: Inicio de medicion (Chequeo)
+      //Estado temporal que solo chequea los electrodos y pasa al siguiente estado
       case INICIO_MEDICION:
-        // Con INPUT_PULLUP, HIGH significa DESCONECTADO
+        //Con INPUT_PULLUP, HIGH significa desconectado
         if (digitalRead(LOMENOS) == HIGH || digitalRead(LOMAS) == HIGH) {
-          Serial.println("ED"); // Error: Electrodos Desconectados
-          estadoActual = INICIO;  // Vuelve a esperar
+          Serial.println("ED"); //Error: electrodos desconectados
+          estadoActual = INICIO; 
         } else {
-          // ¡Todo OK!
-          Serial.println("IM"); // Envía "IM" (¡UNA SOLA VEZ!)
-          Posicion = 0;           // Reinicia el contador de muestras
-          estadoActual = MIDIENDO_ACTIVA; // ¡Pasa al estado de medición!
+          Serial.println("IM"); //Envia IM
+          Posicion = 0; //Reinicia el contador de muestras
+          estadoActual = MIDIENDO_ACTIVA; //pasa al estado de medicion
         }
         break;
 
-      // ESTADO 2: MIDIENDO ACTIVA (Tomando muestras)
-      // Este es el estado principal donde se toman y envían datos.
+      //ESTADO 2: Tomando muestras
+      //estado principal donde se toman y envian losdatos
       case MIDIENDO_ACTIVA:
-        // Chequea si los electrodos se caen MIENTRAS mide
+        //Chequea si los electrodos se desconectan en la medicion
         if (digitalRead(LOMENOS) == HIGH || digitalRead(LOMAS) == HIGH) {
           Serial.println("ED");
-          estadoActual = INICIO; // Detiene la medición y vuelve a esperar
+          estadoActual = INICIO; //Detiene la medición ycomienza de vuelta
         } else {
-          // Todo bien, sigue midiendo
           int Medicion = analogRead(SIGNAL);
           ECG_Almacenamiento[Posicion] = Medicion;
           Posicion++;
 
-          // Si el buffer está lleno, enviarlo
+          //Si el buffer esta lleno, se envia
           if (Posicion >= TAM_DE_MEMORIA) {
             Serial.print('<');
             for (int i = 0; i < TAM_DE_MEMORIA; i++) {
@@ -149,26 +136,24 @@ void loop() {
             }
             Serial.println(">");
             Posicion = 0;
-            // IMPORTANTE: Se queda en estado MIDIENDO_ACTIVA
-            // listo para el siguiente paquete de datos.
           }
         }
         break;
 
-      // ESTADO 3: REINICIAR MEDICIÓN
+      // ESTADO 3: Reiniciar medicion
       case REINICIAR_MEDICION:
         Posicion = 0;
         Serial.println("R");
-        estadoActual = INICIO; // Vuelve al estado de espera
+        estadoActual = INICIO; //Vuelve al estado de espera
         break;
 
-      // ESTADO 4: GUARDAR MEDICIÓN
+      // ESTADO 4: Guardar medicion
       case GUARDAR_MEDICION:
         Serial.println("G");
-        estadoActual = INICIO; // Vuelve al estado de espera
+        estadoActual = INICIO; //Vuelve al estado de espera
         break;
       
-      // ESTADO 0: INICIO (Reposo)
+      // ESTADO 0: Inicio
       case INICIO:
       default:
         // No hacer nada, solo esperar un comando
@@ -176,10 +161,7 @@ void loop() {
     }
   }
 }
-
-// =======================================================
-//  EVENTO SERIAL (para recibir comandos de Processing)
-// =======================================================
+// serialEvent(para recibir comandos de Processing)
 void serialEvent() {
   while (Serial.available()) {
     char inChar = (char)Serial.read();
