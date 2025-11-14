@@ -1,23 +1,17 @@
 import processing.serial.*;
 
-// ... (todas tus variables globales sin cambios) ...
+
 Serial myPort;
 PImage miImagen;
 int btnWidth = 200, btnHeight = 80, btnY = 800;
 int btn1X = 300, btn2X = btn1X + btnWidth + 30, btn3X = btn2X + btnWidth + 30;
 String label1 = "INICIAR", label2 = "REINICIAR", label3 = "GUARDAR";
 ArrayList<Float> ecgData = new ArrayList<Float>();
-int maxSamples = 50;
+int maxSamples = 300;
 enum Estado { ESPERANDO, MIDIENDO, DESCONECTADO }
 Estado estadoActual = Estado.ESPERANDO;
 String mensajeTemporal = "";
 float tiempoMensaje = 0, duracionMensaje = 2500;
-// ... (fin de las variables globales) ...
-
-
-// =======================================================
-//  SETUP, DRAW, y otras funciones (SIN CAMBIOS)
-// =======================================================
 
 void setup() {
   size(1200, 900);
@@ -28,7 +22,7 @@ void setup() {
   smooth(8); 
   println(Serial.list());
   try {
-    myPort = new Serial(this, "COM5", 9600);
+    myPort = new Serial(this, "COM9", 9600);
     myPort.bufferUntil('\n');
   } catch (Exception e) {
     println("Error al abrir el puerto COM. Asegúrate de que el Arduino esté conectado.");
@@ -37,7 +31,7 @@ void setup() {
 }
 
 void draw() {
-  // ... (TODA TU FUNCIÓN DRAW() QUEDA EXACTAMENTE IGUAL) ...
+ 
   background(255, 242, 242);
   fill(0);
   textSize(58);
@@ -80,7 +74,7 @@ void draw() {
 }
 
 void drawGraph() {
-  // ... (TODA TU FUNCIÓN DRAWGRAPH() QUEDA EXACTAMENTE IGUAL) ...
+  
   pushStyle();    
   pushMatrix();   
   translate(50, 200);
@@ -106,7 +100,7 @@ void drawGraph() {
   beginShape();
   for (int i = 0; i < ecgData.size(); i++) {
     float x_ecg = map(i, 0, maxSamples - 1, 0, w);
-    float y_ecg = map(ecgData.get(i), 300, 700, h, 0); 
+    float y_ecg = map(ecgData.get(i), 200, 600, h, 0); 
     vertex(x_ecg, y_ecg);
   }
   endShape();
@@ -115,7 +109,7 @@ void drawGraph() {
 }
 
 void drawButton(int x, int y, int w, int h, String label) {
-  // ... (TODA TU FUNCIÓN DRAWBUTTON() QUEDA EXACTAMENTE IGUAL) ...
+
   pushStyle(); 
   if (mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h) {
     fill(200, 200, 255);
@@ -131,21 +125,15 @@ void drawButton(int x, int y, int w, int h, String label) {
   popStyle(); 
 }
 
-
-// =======================================================
-//  EVENTO SERIAL (¡AQUÍ ESTÁ EL CAMBIO!)
-// =======================================================
 void serialEvent(Serial myPort) {
   String inString = myPort.readStringUntil('\n');
   if (inString == null) return;
   inString = trim(inString);
 
-  // --- Procesar comandos del Arduino ---
-  
   if (inString.equals("IM")) {
     println("[ARDUINO] Comando: Inicio de medición");
     estadoActual = Estado.MIDIENDO;
-    ecgData.clear(); // Limpiamos la gráfica al *iniciar*, eso está bien
+    ecgData.clear(); 
     mensajeTemporal = "Iniciando medición...";
     tiempoMensaje = millis();
   }  
@@ -169,33 +157,29 @@ void serialEvent(Serial myPort) {
     tiempoMensaje = millis();
   }  
   
-  // =======================================================
-  // CAMBIO EN PROCESSING: Lógica de "Atomic Swap"
-  // =======================================================
+ 
   else if (inString.startsWith("<") && inString.endsWith(">")) {
     
-    // 1. Parsear los datos a una LISTA TEMPORAL
+    
     inString = inString.substring(1, inString.length() - 1);
     String[] values = split(inString, ',');
     
-    // ¡NUEVO! Creamos una lista temporal
+ 
     ArrayList<Float> newData = new ArrayList<Float>();
     
     for (String val : values) {
       try {
-        newData.add(float(val)); // Añadimos datos a la lista temporal
+        newData.add(float(val)); 
       } catch (Exception e) {}
     }
     
-    // 2. Solo si la lista temporal está llena y es válida...
+
     if (newData.size() == maxSamples) {
-      // 3. ...reemplazamos la lista real por la temporal.
-      ecgData = newData; // ¡Este es el "swap"!
+
+      ecgData = newData; 
     }
-    // ¡Nota que YA NO HAY 'ecgData.clear()' aquí!
-    // La gráfica vieja se mantiene hasta este preciso instante.
+  
   }  
-  // =======================================================
   
   else {
     if(inString.length() > 0) {
@@ -204,9 +188,6 @@ void serialEvent(Serial myPort) {
   }
 }
 
-// =======================================================
-//  TECLADO Y MOUSE (SIN CAMBIOS)
-// =======================================================
 void keyPressed() {
   if (myPort == null) return;
   if (key == 'M' || key == 'm') myPort.write("IM\n");
