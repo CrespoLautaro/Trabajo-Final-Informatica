@@ -5,10 +5,10 @@ Serial myPort;
 PImage miImagen;
 int btnWidth = 200, btnHeight = 80, btnY = 800;
 int btn1X = 300, btn2X = btn1X + btnWidth + 30, btn3X = btn2X + btnWidth + 30;
-String label1 = "INICIAR", label2 = "REINICIAR", label3 = "GUARDAR";
+String label1 = "INICIAR", label2 = "PAUSAR", label3 = "GUARDAR";       //Nombre de los botones
 ArrayList<Float> ecgData = new ArrayList<Float>();
 int maxSamples = 300;
-enum Estado { ESPERANDO, MIDIENDO, DESCONECTADO }
+enum Estado { ESPERANDO, MIDIENDO, PAUSADO, DESCONECTADO }
 Estado estadoActual = Estado.ESPERANDO;
 String mensajeTemporal = "";
 float tiempoMensaje = 0, duracionMensaje = 2500;
@@ -22,7 +22,7 @@ void setup() {
   smooth(8); 
   println(Serial.list());
   try {
-    myPort = new Serial(this, "COM9", 9600);
+    myPort = new Serial(this, "COM5", 9600);
     myPort.bufferUntil('\n');
   } catch (Exception e) {
     println("Error al abrir el puerto COM. Asegúrate de que el Arduino esté conectado.");
@@ -42,7 +42,7 @@ void draw() {
   switch (estadoActual) {
     case DESCONECTADO:
       fill(255, 0, 0);
-      text("⚠ Electrodos desconectados ⚠", 50, 140);
+      text(" Electrodos desconectados ", 50, 140);
       break;
     case MIDIENDO:
       fill(0, 150, 0);
@@ -52,6 +52,10 @@ void draw() {
     default:
       fill(150, 0, 0);
       text("Esperando inicio de medición", 50, 140);
+      break;
+    case PAUSADO:
+      fill(0, 0, 150); // Azul para indicar pausa
+      text(" Visualización Pausada - Pulsa INICIAR para seguir", 50, 140);
       break;
   }
   drawButton(btn1X, btnY, btnWidth, btnHeight, label1);
@@ -143,17 +147,18 @@ void serialEvent(Serial myPort) {
     mensajeTemporal = "¡Electrodos desconectados!";
     tiempoMensaje = millis();
   }  
-  else if (inString.equals("R")) {
+  else if (inString.equals("P")) {
     println("[ARDUINO] Comando: Reinicio recibido");
     estadoActual = Estado.ESPERANDO;
     ecgData.clear(); // Limpiamos al reiniciar
-    mensajeTemporal = "Reiniciando medición...";
+    mensajeTemporal = "Medición pausada...";
     tiempoMensaje = millis();
   }  
   else if (inString.equals("G")) {
     println("[ARDUINO] Comando: Guardado recibido");
     estadoActual = Estado.ESPERANDO;
     mensajeTemporal = "Medición guardada.";
+    guardarDatos();
     tiempoMensaje = millis();
   }  
   
@@ -176,7 +181,9 @@ void serialEvent(Serial myPort) {
 
     if (newData.size() == maxSamples) {
 
-      ecgData = newData; 
+      if (estadoActual != Estado.PAUSADO) {
+        ecgData = newData; 
+    }
     }
   
   }  
@@ -191,15 +198,68 @@ void serialEvent(Serial myPort) {
 void keyPressed() {
   if (myPort == null) return;
   if (key == 'M' || key == 'm') myPort.write("IM\n");
-  else if (key == 'R' || key == 'r') myPort.write("R\n");
+  else if (key == 'P' || key == 'p') myPort.write("P\n");
   else if (key == 'G' || key == 'g') myPort.write("G\n");
 }
 
 void mousePressed() {
-  if (myPort == null) return; 
-  if (mouseY > btnY && mouseY < btnY + btnHeight) {
-    if (mouseX > btn1X && mouseX < btn1X + btnWidth) myPort.write("IM\n");
-    else if (mouseX > btn2X && mouseX < btn2X + btnWidth) myPort.write("R\n");
-    else if (mouseX > btn3X && mouseX < btn3X + btnWidth) myPort.write("G\n");
+if (myPort == null) return; 
+  
+  // Verificamos primero la altura Y de los botones
+  if (mouseY > btnY && mouseY < btnY + btnHeight) {  
+
+    // Botón 1: INICIAR / REANUDAR
+    if (mouseX > btn1X && mouseX < btn1X + btnWidth) {
+      if (estadoActual == Estado.PAUSADO) {
+        // Si estaba pausado, reanudamos localmente
+        estadoActual = Estado.MIDIENDO;
+        mensajeTemporal = "Reanudando...";
+        tiempoMensaje = millis();
+      } else {
+        // Si no, mandamos comando de inicio al Arduino
+        myPort.write("IM\n");
+      }
+    }
+    
+    // Botón 2: PAUSAR (Solo visual)
+    else if (mouseX > btn2X && mouseX < btn2X + btnWidth)  { 
+      if (estadoActual == Estado.MIDIENDO) {       
+        estadoActual = Estado.PAUSADO;
+        mensajeTemporal = "Gráfico Pausado";
+        tiempoMensaje = millis();
+      }
+    }
+    
+    // Botón 3: GUARDAR
+    else if (mouseX > btn3X && mouseX < btn3X + btnWidth) {
+      guardarDatos(); 
+    }
   }
+}
+
+void guardarDatos() {
+  // Si la lista está vacía, no guardamos nada para evitar errores
+  if (ecgData.size() == 0) {
+    mensajeTemporal = "¡No hay datos para guardar!";
+    tiempoMensaje = millis();
+    return;
+  }
+
+  //  Convertimos el ArrayList ecgData a un arreglo de Strings (texto)
+  String[] lineas = new String[ecgData.size()];
+  for (int i = 0; i < ecgData.size(); i++) {
+    String valorTexto = str(ecgData.get(i)); 
+    valorTexto = valorTexto.replace(".", ",");
+    lineas[i] = str(ecgData.get(i)); 
+  }
+  
+  String nombreArchivo = "ECG_" + year() + "-" + month() + "-" + day() + "_" + hour() + "-" + minute() + "-" + second() + ".txt";
+
+  //  Guardamos el archivo en la carpeta del sketch
+  saveStrings(nombreArchivo, lineas);
+
+  //  Avisamos al usuario
+  println("Archivo guardado: " + nombreArchivo);
+  mensajeTemporal = "Archivo guardado exitosamente";
+  tiempoMensaje = millis();
 }
