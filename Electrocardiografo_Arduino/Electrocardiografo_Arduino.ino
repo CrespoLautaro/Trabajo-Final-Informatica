@@ -3,7 +3,7 @@
 #define LOMAS 10
 #define SIGNAL A0
 const int PULSADOR1 = 2; //Iniciar
-const int PULSADOR2 = 3; //Reiniciar
+const int PULSADOR2 = 3; //Pausar
 const int PULSADOR3 = 4; //Guardar
 const int TAM_DE_MEMORIA = 300;
 
@@ -18,7 +18,7 @@ float TiempoAnterior = 0;
 //Maquina de estados de arduino
 enum Estado {
   INICIO_MEDICION,    //Estado temporal para chequear y enviar "IM
-  REINICIAR_MEDICION, 
+  PAUSAR_MEDICION, 
   GUARDAR_MEDICION, 
   MIDIENDO_ACTIVA,    //Estado para tomar muestras
   INICIO              //Estado de reposo
@@ -56,8 +56,8 @@ void loop() {
   if (stringComplete) {
     if (inputString == "IM") {
       estadoActual = INICIO_MEDICION;
-    } else if (inputString == "R") {
-      estadoActual = REINICIAR_MEDICION;
+    } else if (inputString == "P") {
+      estadoActual = PAUSAR_MEDICION;
     } else if (inputString == "G") {
       estadoActual = GUARDAR_MEDICION;
     }
@@ -78,7 +78,7 @@ void loop() {
 
   //Comprobar el Pulsador 2 (Reiniciar)
   if (actualPULSADOR2 == LOW && ultimoPULSADOR2 == HIGH) {
-    estadoActual = REINICIAR_MEDICION;
+    estadoActual = PAUSAR_MEDICION;
     delay(50); 
   }
 
@@ -141,9 +141,9 @@ void loop() {
         break;
 
       // ESTADO 3: Reiniciar medicion
-      case REINICIAR_MEDICION:
+      case PAUSAR_MEDICION:
         Posicion = 0;
-        Serial.println("R");
+        Serial.println("P");
         estadoActual = INICIO; //Vuelve al estado de espera
         break;
 
@@ -172,3 +172,4 @@ void serialEvent() {
     }
   }
 }
+
