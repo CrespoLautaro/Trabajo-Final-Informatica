@@ -32,7 +32,9 @@ El proyecto se divide en dos entornos de programación que trabajan de forma con
 1. Código en Arduino (Firmware)
 Función: Lee continuamente la señal analógica acondicionada proveniente del pin de salida del módulo AD8232.
 
-Proceso: Convierte el valor analógico a un número digital y lo envía de manera constante al puerto serial de la computadora a una velocidad de baudios específica.
+Proceso: 
+
+Convierte el valor analógico a un número digital y lo envía de manera constante al puerto serial de la computadora a una velocidad de baudios específica.
 
 2. Código en Processing (Visualización)
 Función: Actúa como la interfaz gráfica de usuario (GUI).
@@ -48,6 +50,7 @@ Proceso:
 👤 Integrantes: 
 
 -Polvoreda Juan Pablo
+
 -Crespo Lautaro
 
 ![sddefault](https://github.com/user-attachments/assets/9c469f0e-1dd4-4b16-af0d-0d46659e5386)
