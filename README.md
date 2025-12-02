@@ -2,11 +2,13 @@ Trabajo Final: Electrocardiograma con Arduino
 Integrantes: Crespo Lautaro, Polvoreda Juan Pablo
 ![sddefault](https://github.com/user-attachments/assets/9c469f0e-1dd4-4b16-af0d-0d46659e5386)
 
-🧠Proyecto: Monitor de Electrocardiograma (ECG) con Arduino y Processing
+🧠Proyecto: Monitor de Electrocardiograma (ECG) con Arduino y Processing.
 Este proyecto desarrolla un sistema de bajo costo para adquisición y visualización de la señal eléctrica del corazón (ECG) utilizando hardware de código abierto y un entorno de programación visual.
 
-🌟 Objetivo Principal
+🌟 Objetivo Principal.
 Implementar una cadena de adquisición de datos biométricos que permita capturar la señal cardíaca, acondicionarla y representarla gráficamente en tiempo real en una computadora, simulando un monitor de ECG médico.
+
+⚙️ Elementos de Hardware UtilizadosComponenteCantidadArduino Uno1Módulo Sensor AD8232 Ritmo Cardiaco C/3 Electrodos1Cables Dupont5Cable USB-B a USB-A1Pulsadores3Resistencias de $10\text{K}\ \Omega$3
 
 💻 Software y Flujo de Trabajo
 El proyecto se divide en dos entornos de programación que trabajan de forma conjunta:
