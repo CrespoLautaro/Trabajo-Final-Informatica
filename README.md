@@ -16,7 +16,7 @@ Implementar una cadena de adquisición de datos biométricos que permita captura
 
 1 Módulo Sensor AD8232 Ritmo Cardiaco C/3 Electrodos.
 
-5 Cables Dupont.
+14 Cables Dupont.
 
 1 Cable USB-B a USB-A.
 
