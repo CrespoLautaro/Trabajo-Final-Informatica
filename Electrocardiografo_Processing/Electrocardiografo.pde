@@ -1,196 +1,358 @@
 import processing.serial.*;
+import javax.swing.*; 
 
+// Usamos libreria propia
+GestorArchivos miArchivo; 
 
 Serial myPort;
-PImage miImagen;
-int btnWidth = 200, btnHeight = 80, btnY = 800;
-int btn1X = 300, btn2X = btn1X + btnWidth + 30, btn3X = btn2X + btnWidth + 30;
-String label1 = "INICIAR", label2 = "PAUSAR", label3 = "GUARDAR";       //Nombre de los botones
+PImage miImagen; 
+
+// Se calculan dinámicamente según el tamaño de la ventana
+float btnX1, btnX2, btnX3;
+float btnY, btnW, btnH;
+float graphX, graphY, graphW, graphH;
+float tamTextoTitulo, tamTextoNormal;
+
+// Botones
+String label1 = "INICIAR";
+String label2 = "PAUSAR"; 
+String label3 = "GUARDAR";
+
+// Datos y Estados
 ArrayList<Float> ecgData = new ArrayList<Float>();
 int maxSamples = 300;
+float rangoMin = 0;   
+float rangoMax = 1023;
 enum Estado { ESPERANDO, MIDIENDO, PAUSADO, DESCONECTADO }
 Estado estadoActual = Estado.ESPERANDO;
+
+// Mensajes Emergentes
 String mensajeTemporal = "";
-float tiempoMensaje = 0, duracionMensaje = 2500;
+float tiempoMensaje = 0;
+float duracionMensaje = 2500;
 
 void setup() {
-  size(1200, 900);
+  //Ventana redimensionable
+  size(1000, 700); 
   surface.setResizable(true);
-  miImagen = loadImage("corazon.jpg");
-  PFont myFont = createFont(PFont.list()[3], 60);
-  textFont(myFont);
-  smooth(8); 
+  
+  miImagen = loadImage("corazon.jpg"); 
+  
+  // Inicializamos librería
+  miArchivo = new GestorArchivos("Datos_ECG");
+
   println(Serial.list());
   try {
-    myPort = new Serial(this, "COM5", 9600);
+ 
+    myPort = new Serial(this, "COM3", 9600); 
     myPort.bufferUntil('\n');
   } catch (Exception e) {
-    println("Error al abrir el puerto COM. Asegúrate de que el Arduino esté conectado.");
-    e.printStackTrace();
+    println("Error: Arduino no conectado.");
   }
 }
 
+// Funcion de calculo de las posiciones
+void recalcularInterfaz() {
+  
+  btnW = width * 0.15;
+  btnH = height * 0.08;
+  btnY = height * 0.85; 
+  
+  //Centrado de botones
+  float espacio = width * 0.02; 
+  float anchoTotalBotones = (btnW * 3) + (espacio * 2);
+  float inicioX = (width - anchoTotalBotones) / 2;
+  
+  btnX1 = inicioX;
+  btnX2 = btnX1 + btnW + espacio;
+  btnX3 = btnX2 + btnW + espacio;
+  
+  graphX = width * 0.05;
+  graphY = height * 0.20;
+  graphW = width * 0.90;
+  graphH = height * 0.55;
+  
+  tamTextoTitulo = height * 0.06; 
+  tamTextoNormal = height * 0.025; 
+}
+
 void draw() {
- 
+
+  recalcularInterfaz();
+  
   background(255, 242, 242);
-  fill(0);
-  textSize(58);
-  textAlign(LEFT); 
-  text("Electrocardiógrafo", 640, 60);
-  image(miImagen, 1000, 10);
-  textSize(20);
-  switch (estadoActual) {
-    case DESCONECTADO:
-      fill(255, 0, 0);
-      text(" Electrodos desconectados ", 50, 140);
-      break;
-    case MIDIENDO:
-      fill(0, 150, 0);
-      text("Midiendo señal en tiempo real...", 50, 140);
-      break;
-    case ESPERANDO:
-    default:
-      fill(150, 0, 0);
-      text("Esperando inicio de medición", 50, 140);
-      break;
-    case PAUSADO:
-      fill(0, 0, 150); // Azul para indicar pausa
-      text(" Visualización Pausada - Pulsa INICIAR para seguir", 50, 140);
-      break;
+  
+  fill(0); 
+  textSize(tamTextoTitulo); 
+  textAlign(CENTER); 
+  text("Electrocardiógrafo", width / 2, height * 0.10);
+ 
+  if (miImagen != null) {
+    float imgSize = height * 0.1; 
+    image(miImagen, width - imgSize*4 , 20, 150, imgSize);
   }
-  drawButton(btn1X, btnY, btnWidth, btnHeight, label1);
-  drawButton(btn2X, btnY, btnWidth, btnHeight, label2);
-  drawButton(btn3X, btnY, btnWidth, btnHeight, label3);
+  
+  textSize(tamTextoNormal);
+  textAlign(LEFT);
+  float estadoY = graphY - 15; 
+  
+  switch (estadoActual) {
+    case DESCONECTADO: fill(255, 0, 0); text("Electrodos desconectados", graphX, estadoY); break;
+    case MIDIENDO:     fill(0, 150, 0); text("Midiendo señal...", graphX, estadoY); break;
+    case PAUSADO:      fill(0, 0, 150); text("Visualización Pausada", graphX, estadoY); break;
+    default:           fill(150, 0, 0); text("Esperando inicio...", graphX, estadoY); break;
+  }
+
+  // --- DIBUJAR BOTONES ---
+  drawButton(btnX1, btnY, btnW, btnH, label1);
+  drawButton(btnX2, btnY, btnW, btnH, label2);
+  drawButton(btnX3, btnY, btnW, btnH, label3);
+  
   drawGraph();
+  
+  // --- MENSAJE FLOTANTE ---
   if (millis() - tiempoMensaje < duracionMensaje) {
     pushStyle(); 
-    rectMode(CENTER); 
-    fill(0, 0, 0, 150); 
-    noStroke();
-    float posYMensaje = 300; 
-    rect(width / 2, posYMensaje, 450, 100, 15); 
-    fill(255); 
-    textSize(28);
-    textAlign(CENTER, CENTER); 
-    text(mensajeTemporal, width / 2, posYMensaje);
+    rectMode(CENTER); fill(0, 0, 0, 150); noStroke();
+    rect(width / 2, height / 2, width * 0.5, height * 0.1, 15); 
+    fill(255); textSize(tamTextoNormal * 1.5); textAlign(CENTER, CENTER); 
+    text(mensajeTemporal, width / 2, height / 2);
     popStyle(); 
   }
 }
 
-void drawGraph() {
+//
+void mousePressed() {
   
-  pushStyle();    
-  pushMatrix();   
-  translate(50, 200);
-  float w = width - 100;
-  float h = 500;
-  stroke(255, 220, 220); 
-  strokeWeight(0.5);
-  int pasoMenor = 10;
-  for (float x = 0; x <= w; x += pasoMenor) line(x, 0, x, h);
-  for (float y = 0; y <= h; y += pasoMenor) line(0, y, w, y);
-  stroke(255, 180, 180); 
-  strokeWeight(1);
-  int pasoMayor = 50;
-  for (float x = 0; x <= w; x += pasoMayor) line(x, 0, x, h);
-  for (float y = 0; y <= h; y += pasoMayor) line(0, y, w, y);
-  stroke(0);
-  strokeWeight(1);
-  noFill();
-  rect(0, 0, w, h); 
-  stroke(255, 0, 0); 
-  strokeWeight(2);
-  noFill();
-  beginShape();
-  for (int i = 0; i < ecgData.size(); i++) {
-    float x_ecg = map(i, 0, maxSamples - 1, 0, w);
-    float y_ecg = map(ecgData.get(i), 200, 600, h, 0); 
-    vertex(x_ecg, y_ecg);
+  if (mouseY > btnY && mouseY < btnY + btnH) {  
+    
+    // --- BOTÓN 1: INICIAR ---
+    if (mouseX > btnX1 && mouseX < btnX1 + btnW) {
+      if (estadoActual == Estado.PAUSADO) {
+        estadoActual = Estado.MIDIENDO;
+        mensajeTemporal = "Reanudando...";
+      } else {
+        if(myPort != null) myPort.write("IM\n"); // Enviar a Arduino
+        estadoActual = Estado.MIDIENDO;
+        mensajeTemporal = "Iniciando...";
+      }
+      tiempoMensaje = millis();
+    }
+    
+    // --- BOTÓN 2: PAUSAR / REANUDAR ---
+    else if (mouseX > btnX2 && mouseX < btnX2 + btnW) { 
+      if (estadoActual == Estado.MIDIENDO) {        
+        estadoActual = Estado.PAUSADO;
+        mensajeTemporal = "Gráfico Pausado";
+      } else if (estadoActual == Estado.PAUSADO) {
+        estadoActual = Estado.MIDIENDO;
+        mensajeTemporal = "Reanudando...";
+      }
+      tiempoMensaje = millis();
+    }
+    
+    // --- BOTÓN 3: GUARDAR ---
+    else if (mouseX > btnX3 && mouseX < btnX3 + btnW) {
+      realizarGuardadoConDatos();
+    }
   }
-  endShape();
-  popMatrix(); 
-  popStyle();  
 }
 
-void drawButton(int x, int y, int w, int h, String label) {
-
-  pushStyle(); 
-  if (mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h) {
-    fill(200, 200, 255);
-  } else {
-    fill(220);
+// --- LÓGICA DE GUARDADO ---
+void realizarGuardadoConDatos() {
+  // 1. VALIDACIÓN
+  if (ecgData == null || ecgData.size() == 0) {
+    mensajeTemporal = "¡No hay datos para guardar!";
+    tiempoMensaje = millis();
+    return; 
   }
-  stroke(0);
-  rect(x, y, w, h, 5);
-  fill(0);
-  textSize(16);
+
+  // 2. PAUSA
+  Estado estadoPrevio = estadoActual;
+  estadoActual = Estado.PAUSADO; 
+  
+  // 3. VENTANA
+  String[] resultado = pedirDatosPaciente();
+  
+  if (resultado != null) {
+     String infoCompleta = resultado[0];
+     String nombreSolo = resultado[1];
+     miArchivo.guardar(ecgData, infoCompleta, nombreSolo);
+     mensajeTemporal = "Guardado: " + nombreSolo;
+  } else {
+     mensajeTemporal = "Guardado cancelado";
+  }
+  
+  tiempoMensaje = millis();
+  
+  // 4. REACTIVACIÓN AUTOMÁTICA (Si estaba midiendo antes)
+  if (estadoPrevio == Estado.MIDIENDO) estadoActual = Estado.MIDIENDO;
+}
+
+// --- VENTANA EMERGENTE ---
+String[] pedirDatosPaciente() {
+  JPanel panel = new JPanel();
+  panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+  
+  JTextField nombreField = new JTextField(15);
+  JTextField edadField = new JTextField(5);
+  JTextField dniField = new JTextField(10);
+  JTextField antecedenteField = new JTextField(20);
+
+  panel.add(new JLabel("Nombre y Apellido (Nombre de Archivo):"));
+  panel.add(nombreField);
+  panel.add(new JLabel("Edad:"));
+  panel.add(edadField);
+  panel.add(new JLabel("DNI:"));
+  panel.add(dniField);
+  panel.add(new JLabel("Antecedentes Médicos:"));
+  panel.add(antecedenteField);
+
+  int result = JOptionPane.showConfirmDialog(null, panel, 
+               "Guardar ECG - Datos del Paciente", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+  if (result == JOptionPane.OK_OPTION) {
+    String nombre = nombreField.getText();
+    if (nombre.trim().length() == 0) nombre = "Paciente_Sin_Nombre";
+    
+    String info = "PACIENTE: " + nombre + "\n" +
+                  "EDAD: " + edadField.getText() + "\n" +
+                  "DNI: " + dniField.getText() + "\n" +
+                  "ANTECEDENTES: " + antecedenteField.getText();
+    
+    return new String[] { info, nombre };
+  } else {
+    return null;
+  }
+}
+
+// --- FUNCIONES DE DIBUJO ---
+void drawButton(float x, float y, float w, float h, String label) {
+  pushStyle(); 
+  if (mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h) fill(200, 200, 255);
+  else fill(220);
+  stroke(0); 
+  rect(x, y, w, h, 10);
+  fill(0); 
+  textSize(tamTextoNormal); 
   textAlign(CENTER, CENTER);
   text(label, x + w/2, y + h/2);
   popStyle(); 
 }
 
+void drawGraph() {
+  pushStyle(); 
+  pushMatrix(); 
+  translate(graphX, graphY);
+  
+  // 1. Fondo Blanco
+  stroke(0); strokeWeight(2); fill(255); 
+  rect(0, 0, graphW, graphH); 
+  
+  // 2. Grilla y Escalas
+  stroke(220); strokeWeight(1); fill(80); textSize(10); // Texto gris oscuro y pequeño
+  
+  // --- EJE X (Horizontal - Muestras) ---
+  int numDivisoresX = 20;
+  textAlign(CENTER, TOP); // Alineado al centro y pegado arriba (para que quede bajo la línea)
+  
+  for(int i=0; i<=numDivisoresX; i++) {
+    float x = map(i, 0, numDivisoresX, 0, graphW);
+    line(x, 0, x, graphH); // Línea vertical
+    
+    // Dibujamos el número solo cada 2 líneas para no amontonar
+    if (i % 2 == 0) {
+      int valorMuestra = int(map(i, 0, numDivisoresX, 0, maxSamples));
+      text(valorMuestra, x, graphH + 5); // Dibujamos 5 pixeles debajo del gráfico
+    }
+  }
+
+  // Escalas grafico
+  int numDivisoresY = 10;
+  textAlign(RIGHT, CENTER); 
+  
+  for(int i=0; i<=numDivisoresY; i++) {
+    float y = map(i, 0, numDivisoresY, graphH, 0); 
+    line(0, y, graphW, y); // Línea horizontal
+    int valorAmplitud = int(map(i, 0, numDivisoresY, 200, 650));
+    text(valorAmplitud, -5, y); 
+  }
+  
+  
+  fill(0);
+  textAlign(CENTER);
+  text("Muestras (Tiempo)", graphW / 2, graphH + 25);
+  
+  pushMatrix();
+  rotate(-HALF_PI); 
+  text("Amplitud (ADC)", -graphH / 2, -30);
+  popMatrix();
+
+  // Dibujamo la Señal 
+  stroke(255, 0, 0); strokeWeight(2); noFill();
+  beginShape();
+  for (int i = 0; i < ecgData.size(); i++) {
+    float x_ecg = map(i, 0, maxSamples - 1, 0, graphW);
+    float y_ecg = map(ecgData.get(i), 200, 700, graphH, 0); 
+    vertex(x_ecg, y_ecg);
+  }
+  endShape();
+  
+  popMatrix(); 
+  popStyle();  
+}
+
+//COMUNICACIÓN SERIAL ---
 void serialEvent(Serial myPort) {
   String inString = myPort.readStringUntil('\n');
   if (inString == null) return;
   inString = trim(inString);
 
+  // COMANDOS DE ESTADOS
   if (inString.equals("IM")) {
-    println("[ARDUINO] Comando: Inicio de medición");
-    estadoActual = Estado.MIDIENDO;
-    ecgData.clear(); 
-    mensajeTemporal = "Iniciando medición...";
+    estadoActual = Estado.MIDIENDO; 
+    ecgData.clear(); // Limpiamos al iniciar
+    mensajeTemporal = "Iniciando..."; 
     tiempoMensaje = millis();
-  }  
-  else if (inString.equals("ED")) {
-    println("[ARDUINO] Comando: Electrodos desconectados");
-    estadoActual = Estado.DESCONECTADO;
-    mensajeTemporal = "¡Electrodos desconectados!";
-    tiempoMensaje = millis();
-  }  
-  else if (inString.equals("P")) {
-    println("[ARDUINO] Comando: Reinicio recibido");
-    estadoActual = Estado.ESPERANDO;
-    ecgData.clear(); // Limpiamos al reiniciar
-    mensajeTemporal = "Medición pausada...";
-    tiempoMensaje = millis();
-  }  
-  else if (inString.equals("G")) {
-    println("[ARDUINO] Comando: Guardado recibido");
-    estadoActual = Estado.ESPERANDO;
-    mensajeTemporal = "Medición guardada.";
-    guardarDatos();
-    tiempoMensaje = millis();
-  }  
-  
- 
-  else if (inString.startsWith("<") && inString.endsWith(">")) {
     
+  } else if (inString.equals("ED")) {
+    estadoActual = Estado.DESCONECTADO; 
+    mensajeTemporal = "¡Electrodos Desconectados!"; 
+    tiempoMensaje = millis();
+    
+  } else if (inString.equals("P")) {
+    estadoActual = Estado.PAUSADO; 
+    mensajeTemporal = "Pausado - Listo para Guardar"; 
+    tiempoMensaje = millis();
+    
+  } else if (inString.equals("G")) {
+    realizarGuardadoConDatos();
+    
+ 
+  } else if (inString.startsWith("<") && inString.endsWith(">")) {
     
     inString = inString.substring(1, inString.length() - 1);
     String[] values = split(inString, ',');
-    
- 
     ArrayList<Float> newData = new ArrayList<Float>();
     
-    for (String val : values) {
-      try {
-        newData.add(float(val)); 
-      } catch (Exception e) {}
+    for (String val : values) { 
+       try { 
+         float valorLeido = float(val);
+         
+         // FILTRO: Invalidamos menores a 200
+         if (valorLeido < 200) {
+           valorLeido = 200; 
+         }
+         
+         
+         newData.add(valorLeido); 
+         
+       } catch (Exception e) {} 
     }
     
-
-    if (newData.size() == maxSamples) {
-
-      if (estadoActual != Estado.PAUSADO) {
-        ecgData = newData; 
-    }
-    }
-  
-  }  
-  
-  else {
-    if(inString.length() > 0) {
-      println("[INFO] " + inString);
+    // Solo actualizamos si llegaron los 300 datos completos y no estamos en pausa
+    if (newData.size() == maxSamples && estadoActual != Estado.PAUSADO) {
+      ecgData = newData;
     }
   }
 }
@@ -200,66 +362,4 @@ void keyPressed() {
   if (key == 'M' || key == 'm') myPort.write("IM\n");
   else if (key == 'P' || key == 'p') myPort.write("P\n");
   else if (key == 'G' || key == 'g') myPort.write("G\n");
-}
-
-void mousePressed() {
-if (myPort == null) return; 
-  
-  // Verificamos primero la altura Y de los botones
-  if (mouseY > btnY && mouseY < btnY + btnHeight) {  
-
-    // Botón 1: INICIAR / REANUDAR
-    if (mouseX > btn1X && mouseX < btn1X + btnWidth) {
-      if (estadoActual == Estado.PAUSADO) {
-        // Si estaba pausado, reanudamos localmente
-        estadoActual = Estado.MIDIENDO;
-        mensajeTemporal = "Reanudando...";
-        tiempoMensaje = millis();
-      } else {
-        // Si no, mandamos comando de inicio al Arduino
-        myPort.write("IM\n");
-      }
-    }
-    
-    // Botón 2: PAUSAR (Solo visual)
-    else if (mouseX > btn2X && mouseX < btn2X + btnWidth)  { 
-      if (estadoActual == Estado.MIDIENDO) {       
-        estadoActual = Estado.PAUSADO;
-        mensajeTemporal = "Gráfico Pausado";
-        tiempoMensaje = millis();
-      }
-    }
-    
-    // Botón 3: GUARDAR
-    else if (mouseX > btn3X && mouseX < btn3X + btnWidth) {
-      guardarDatos(); 
-    }
-  }
-}
-
-void guardarDatos() {
-  // Si la lista está vacía, no guardamos nada para evitar errores
-  if (ecgData.size() == 0) {
-    mensajeTemporal = "¡No hay datos para guardar!";
-    tiempoMensaje = millis();
-    return;
-  }
-
-  //  Convertimos el ArrayList ecgData a un arreglo de Strings (texto)
-  String[] lineas = new String[ecgData.size()];
-  for (int i = 0; i < ecgData.size(); i++) {
-    String valorTexto = str(ecgData.get(i)); 
-    valorTexto = valorTexto.replace(".", ",");
-    lineas[i] = str(ecgData.get(i)); 
-  }
-  
-  String nombreArchivo = "ECG_" + year() + "-" + month() + "-" + day() + "_" + hour() + "-" + minute() + "-" + second() + ".txt";
-
-  //  Guardamos el archivo en la carpeta del sketch
-  saveStrings(nombreArchivo, lineas);
-
-  //  Avisamos al usuario
-  println("Archivo guardado: " + nombreArchivo);
-  mensajeTemporal = "Archivo guardado exitosamente";
-  tiempoMensaje = millis();
 }
