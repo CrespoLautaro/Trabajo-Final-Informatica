@@ -5,12 +5,12 @@
 const int PULSADOR1 = 2; //Iniciar
 const int PULSADOR2 = 3; //Pausar
 const int PULSADOR3 = 4; //Guardar
-const int TAM_DE_MEMORIA = 300;
+const int TAM_DE_MEMORIA = 300; //Buffer
 
 //Variables globales
-int ECG_Almacenamiento[TAM_DE_MEMORIA];
+int ECG_Almacenamiento[TAM_DE_MEMORIA]; 
 int Posicion = 0;
-String inputString = "";
+String inputString = ""; //
 boolean stringComplete = false;
 float Retardo_medicion = 50; //50ms de muestra(20 Hz)
 float TiempoAnterior = 0;
