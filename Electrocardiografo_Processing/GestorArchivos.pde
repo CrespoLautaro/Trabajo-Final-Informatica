@@ -34,7 +34,8 @@ class GestorArchivos {
  
     String nombreArchivo = nombreLimpio + "_" + year() + "-" + month() + "-" + day() + "_" + hour() + "-" + minute() + "-" + second() + ".csv";
 
-    saveStrings(nombreArchivo, lineas);
+    saveStrings(nombreArchivo, lineas); //función de Processing para guardar archivos
     println("--> Archivo guardado: " + nombreArchivo);
   }
 }
+
