@@ -10,7 +10,7 @@ private:
 	int ultimoEstado;  //high o low
 	
 public:
-	// Constructor
+	// Constructor(mismo nombre)
 	Pulsador(int p);
 	
 	void inicializar();
@@ -19,5 +19,6 @@ public:
 
 
 #endif
+
 
 
