@@ -1,7 +1,7 @@
 #include "Pulsador.h"
 
 // Constructor
-Pulsador::Pulsador(int p) {     //Clase::metodo
+Pulsador::Pulsador(int p) {     //de la forma, Clase::metodo
 	pin = p;
 	ultimoEstado = HIGH; 
 }
