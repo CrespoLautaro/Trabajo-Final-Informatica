@@ -38,7 +38,7 @@ void setup() {
   
   miImagen = loadImage("corazon.jpg");  //cargamos la imagen del corazon
   
-  // Inicializamos librería
+  // Creamos el objeto
   miArchivo = new GestorArchivos("Datos_ECG");
 
   println(Serial.list());  //Imprime todos los puertos COM detectados.
@@ -379,6 +379,7 @@ void serialEvent(Serial myPort) {
     }
   }
 }
+
 
 
 
