@@ -203,13 +203,14 @@ void realizarGuardadoConDatos() {
     tiempoMensaje = millis();
     return; 
   }
-  Estado estadoPrevio = estadoActual;  //Si hay datos pausamos la medicion
-  estadoActual = Estado.PAUSADO; 
-  String[] resultado = pedirDatosPaciente();   //Pedimos los datos del paciente, abriendo una ventana
+//Si hay datos:
+  Estado estadoPrevio = estadoActual;      //Guardamos el estado en que estaba
+  estadoActual = Estado.PAUSADO;      // Pausamos la medicion
+  String[] resultado = pedirDatosPaciente();      //Pedimos los datos del paciente, abriendo una ventana
   
-  if (resultado != null) {
-     String infoCompleta = resultado[0];
-     String nombreSolo = resultado[1];
+  if (resultado != null) {               //si no es null(si el usuario no cancelo)
+     String infoCompleta = resultado[0];      //datos del paciente
+     String nombreSolo = resultado[1];        //nombre del archivo
      miArchivo.guardar(ecgData, infoCompleta, nombreSolo);
      mensajeTemporal = "Guardado: " + nombreSolo;
   } else {
@@ -380,6 +381,7 @@ void keyPressed() {
   else if (key == 'P' || key == 'p') myPort.write("P\n");
   else if (key == 'G' || key == 'g') myPort.write("G\n");
 }
+
 
 
 
