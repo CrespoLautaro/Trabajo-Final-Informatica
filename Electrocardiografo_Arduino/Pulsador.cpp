@@ -1,7 +1,7 @@
 #include "Pulsador.h"
 
 // Constructor
-Pulsador::Pulsador(int p) {
+Pulsador::Pulsador(int p) {     //Clase::metodo
 	pin = p;
 	ultimoEstado = HIGH; 
 }
@@ -25,3 +25,4 @@ bool Pulsador::fuePresionado() {
 	return resultado;
 
 }
+
