@@ -112,7 +112,7 @@ void draw() {
   drawButton(btnX2, btnY, btnW, btnH, label2);
   drawButton(btnX3, btnY, btnW, btnH, label3);
   
-  drawGraph();  //Dibuja el grafico dl ECG
+  drawGraph();  //Dibuja el grafico del ECG
   
   // Mensajes emergentes o flotantes
   if (millis() - tiempoMensaje < duracionMensaje) {   //Mientras el tiempo sea menor a 2,5s muestra el mensaje
@@ -379,6 +379,7 @@ void serialEvent(Serial myPort) {
     }
   }
 }
+
 
 
 
