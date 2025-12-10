@@ -7,7 +7,7 @@
 
 const int TAM_DE_MEMORIA = 300;
 
-
+//creo los objetos
 Pulsador btnInicio(2);
 Pulsador btnPausa(3);
 Pulsador btnGuardar(4);
