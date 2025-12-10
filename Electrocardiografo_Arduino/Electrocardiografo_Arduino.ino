@@ -17,7 +17,7 @@ int ECG_Almacenamiento[TAM_DE_MEMORIA];
 int Posicion = 0;
 String inputString = "";
 boolean stringComplete = false;
-float Retardo_medicion = 50; 
+float Retardo_medicion = 4; 
 float TiempoAnterior = 0;
 
 enum Estado {
@@ -38,6 +38,7 @@ void setup() {
   pinMode(SIGNAL, INPUT); 
 }
 
+//Lectura de comandos seriales
 void loop() {
   if (stringComplete) {
     if (inputString == "IM") estadoActual = INICIO_MEDICION;
@@ -75,10 +76,11 @@ void loop() {
           estadoActual = INICIO; 
         } else {
           int Medicion = analogRead(SIGNAL);
-          ECG_Almacenamiento[Posicion] = Medicion;
+          ECG_Almacenamiento[Posicion] = Medicion; // Guardamos la medición en el buffer
           Posicion++;
+          
           if (Posicion >= TAM_DE_MEMORIA) {
-            Serial.print('<');
+            Serial.print('<');  // Enviamos todo en formato <v1,v2,v3,...>
             for (int i = 0; i < TAM_DE_MEMORIA; i++) {
               Serial.print(ECG_Almacenamiento[i]);
               if (i < TAM_DE_MEMORIA - 1) Serial.print(',');
@@ -103,9 +105,11 @@ void loop() {
 }
 
 void serialEvent() {
-  while (Serial.available()) {
-    char inChar = (char)Serial.read();
-    if (inChar != '\n') inputString += inChar;
-    else stringComplete = true;
+  while (Serial.available()) {         // Mientras haya caracteres disponibles...
+    char inChar = (char)Serial.read(); // Leer un carácter
+    if (inChar != '\n')                // Si no es un salto de línea
+      inputString += inChar;           // Lo agregamos a la cadena
+    else
+      stringComplete = true;           // Cadena completa lista para procesar
   }
 }
