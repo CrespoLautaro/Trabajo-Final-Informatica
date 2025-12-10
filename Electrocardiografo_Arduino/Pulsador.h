@@ -7,7 +7,7 @@
 class Pulsador {
 private:
 	int pin;
-	int ultimoEstado;
+	int ultimoEstado;  //high o low
 	
 public:
 	// Constructor
@@ -19,4 +19,5 @@ public:
 
 
 #endif
+
 
