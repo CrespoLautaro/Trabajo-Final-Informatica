@@ -5,7 +5,7 @@ import javax.swing.*; //libreria de java para ventanas emergentes
 GestorArchivos miArchivo; 
 
 Serial myPort;
-PImage miImagen; 
+PImage miImagen; //imagen del corazon
 
 // Se calculan dinámicamente según el tamaño de la ventana
 float btnX1, btnX2, btnX3;
@@ -13,35 +13,35 @@ float btnY, btnW, btnH;
 float graphX, graphY, graphW, graphH;
 float tamTextoTitulo, tamTextoNormal;
 
-// Botones
+// Texto que aparece dentro de los Botones
 String label1 = "INICIAR";
 String label2 = "PAUSAR"; 
 String label3 = "GUARDAR";
 
 // Datos y Estados
-ArrayList<Float> ecgData = new ArrayList<Float>();
+ArrayList<Float> ecgData = new ArrayList<Float>();  //vector donde se almacenan las 300 muestras que manda Arduino
 int maxSamples = 300;
 float rangoMin = 0;   
 float rangoMax = 1023;
 enum Estado { ESPERANDO, MIDIENDO, PAUSADO, DESCONECTADO }
-Estado estadoActual = Estado.ESPERANDO;
+Estado estadoActual = Estado.ESPERANDO; //estado inicial
 
-// Mensajes Emergentes
+// variable para los Mensajes Emergentes
 String mensajeTemporal = "";
 float tiempoMensaje = 0;
 float duracionMensaje = 2500;
 
 void setup() {
-  //Ventana redimensionable
-  size(1000, 700); 
-  surface.setResizable(true);
   
-  miImagen = loadImage("corazon.jpg"); 
+  size(1000, 700); 
+  surface.setResizable(true); //funcion para hacer la ventana redimensionable
+  
+  miImagen = loadImage("corazon.jpg");  //cargamos la imagen del corazon
   
   // Inicializamos librería
   miArchivo = new GestorArchivos("Datos_ECG");
 
-  println(Serial.list());
+  println(Serial.list());  //Imprime todos los puertos COM detectados.
   try {
  
     myPort = new Serial(this, "COM3", 9600); 
@@ -51,9 +51,9 @@ void setup() {
   }
 }
 
-// Funcion de calculo de las posiciones
+// Funcion de calculo de las posiciones redimensionables
 void recalcularInterfaz() {
-  
+  //utilizamos el ancho y el alto de la ventana y le asignamos un porcentaje
   btnW = width * 0.15;
   btnH = height * 0.08;
   btnY = height * 0.85; 
@@ -76,19 +76,21 @@ void recalcularInterfaz() {
   tamTextoNormal = height * 0.025; 
 }
 
+//Funcion de dibujado principal
 void draw() {
 
   recalcularInterfaz();
   
-  background(255, 242, 242);
-  
-  fill(0); 
-  textSize(tamTextoTitulo); 
-  textAlign(CENTER); 
-  text("Electrocardiógrafo", width / 2, height * 0.10);
+  background(255, 242, 242); //color de fondo
+
+ //Titulo principal
+  fill(0);  //color
+  textSize(tamTextoTitulo); //tamaño segun la ventana
+  textAlign(CENTER); //centramos el texto
+  text("Electrocardiógrafo", width / 2, height * 0.10);   
  
   if (miImagen != null) {
-    float imgSize = height * 0.1; 
+    float imgSize = height * 0.1;            //tamaño y posicion de la imagen
     image(miImagen, width - imgSize*4 , 20, 150, imgSize);
   }
   
@@ -363,4 +365,5 @@ void keyPressed() {
   else if (key == 'P' || key == 'p') myPort.write("P\n");
   else if (key == 'G' || key == 'g') myPort.write("G\n");
 }
+
 
