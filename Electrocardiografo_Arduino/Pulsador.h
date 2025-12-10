@@ -1,3 +1,4 @@
+//Declaracion de la clase pulsador
 #ifndef PULSADOR_H
 #define PULSADOR_H
 
@@ -15,5 +16,6 @@ public:
 	void inicializar();
 	bool fuePresionado();
 };
+
 
 #endif
