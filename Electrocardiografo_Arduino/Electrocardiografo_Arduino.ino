@@ -105,6 +105,7 @@ void loop() {
   }
 }
 
+//no se llama, junta caracteres que llegan por Serial y los va agregando a inputString
 void serialEvent() {
   while (Serial.available()) {         // Mientras haya caracteres disponibles...
     char inChar = (char)Serial.read(); // Leer un carácter
