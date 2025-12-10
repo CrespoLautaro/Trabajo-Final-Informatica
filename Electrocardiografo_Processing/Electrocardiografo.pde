@@ -131,7 +131,7 @@ void draw() {
     popStyle(); //Restaura el estilo gráfico
   }
 }
-// ACCIONES PRINCIPALES 
+// Funciones Principales 
 void iniciarMedicion() {
   estadoActual = Estado.MIDIENDO;
   ecgData.clear();                 // Limpiar datos como hace mousePressed  
@@ -163,41 +163,18 @@ void guardarMedicion() {
   realizarGuardadoConDatos();     // ya existe y está bien
 }
 
-//Botones con el mouse
+//Botones  con el mouse
 void mousePressed() {
-  
-  if (mouseY > btnY && mouseY < btnY + btnH) {   //comprueba que el clic esté en la franja vertical donde están los botones
-    
-    // --- BOTÓN 1: INICIAR ---
-    if (mouseX > btnX1 && mouseX < btnX1 + btnW) {
-      if (estadoActual == Estado.PAUSADO) {
-        estadoActual = Estado.MIDIENDO;
-        mensajeTemporal = "Reanudando...";
-      } else {
-        if(myPort != null) myPort.write("IM\n"); // Enviar a Arduino
-        estadoActual = Estado.MIDIENDO;
-        mensajeTemporal = "Iniciando...";
-      }
-      tiempoMensaje = millis();
-    }
-    
-    // --- BOTÓN 2: PAUSAR / REANUDAR ---
-    else if (mouseX > btnX2 && mouseX < btnX2 + btnW) { 
-      if (estadoActual == Estado.MIDIENDO) {        
-        estadoActual = Estado.PAUSADO;
-        mensajeTemporal = "Gráfico Pausado";
-      } else if (estadoActual == Estado.PAUSADO) {
-        estadoActual = Estado.MIDIENDO;
-        mensajeTemporal = "Reanudando...";
-      }
-      tiempoMensaje = millis();
-    }
-    
-    // --- BOTÓN 3: GUARDAR ---
-    else if (mouseX > btnX3 && mouseX < btnX3 + btnW) {
-      realizarGuardadoConDatos();
-    }
-  }
+  if (mouseX > btnX1 && mouseX < btnX1 + btnW) {
+    iniciarMedicion();
+}
+else if (mouseX > btnX2 && mouseX < btnX2 + btnW) {
+    if (estadoActual == Estado.MIDIENDO) pausarMedicion();
+    else if (estadoActual == Estado.PAUSADO) reanudarMedicion();
+}
+else if (mouseX > btnX3 && mouseX < btnX3 + btnW) {
+    guardarMedicion();
+} 
 }
 
 // --- LÓGICA DE GUARDADO ---
@@ -405,6 +382,7 @@ void keyPressed() {
   else if (key == 'P' || key == 'p') myPort.write("P\n");
   else if (key == 'G' || key == 'g') myPort.write("G\n");
 }
+
 
 
 
