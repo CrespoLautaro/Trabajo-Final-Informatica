@@ -6,12 +6,12 @@ Pulsador::Pulsador(int p) {
 	ultimoEstado = HIGH; 
 }
 
-// Configuraci�n del pin
+// Configuracion del pin
 void Pulsador::inicializar() {
-    pinMode(pin, INPUT_PULLUP); // <--- CAMBIO CLAVE
-    ultimoEstado = HIGH;        // Asumimos que arranca sin pulsar (HIGH por el pullup)
+    pinMode(pin, INPUT_PULLUP); 
+    ultimoEstado = HIGH;        
 }
-// L�gica del bot�n
+// Logica del boton
 bool Pulsador::fuePresionado() {
 	int estadoActual = digitalRead(pin);
 	bool resultado = false;
@@ -23,4 +23,5 @@ bool Pulsador::fuePresionado() {
 	
 	ultimoEstado = estadoActual;
 	return resultado;
+
 }
