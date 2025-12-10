@@ -131,6 +131,37 @@ void draw() {
     popStyle(); //Restaura el estilo gráfico
   }
 }
+// ACCIONES PRINCIPALES 
+void iniciarMedicion() {
+  estadoActual = Estado.MIDIENDO;
+  ecgData.clear();                 // Limpiar datos como hace mousePressed  
+  mensajeTemporal = "Iniciando..."; 
+  tiempoMensaje = millis();
+
+  if (myPort != null) myPort.write("IM\n");  // Solo si querés que el botón se lo mande a Arduino
+}
+
+void pausarMedicion() {
+  estadoActual = Estado.PAUSADO;
+  mensajeTemporal = "Gráfico Pausado";
+  tiempoMensaje = millis();
+}
+
+void reanudarMedicion() {
+  estadoActual = Estado.MIDIENDO;
+  mensajeTemporal = "Reanudando...";
+  tiempoMensaje = millis();
+}
+
+void desconectado() {
+  estadoActual = Estado.DESCONECTADO;
+  mensajeTemporal = "¡Electrodos desconectados!";
+  tiempoMensaje = millis();
+}
+
+void guardarMedicion() {
+  realizarGuardadoConDatos();     // ya existe y está bien
+}
 
 //Botones con el mouse
 void mousePressed() {
@@ -374,6 +405,7 @@ void keyPressed() {
   else if (key == 'P' || key == 'p') myPort.write("P\n");
   else if (key == 'G' || key == 'g') myPort.write("G\n");
 }
+
 
 
 
