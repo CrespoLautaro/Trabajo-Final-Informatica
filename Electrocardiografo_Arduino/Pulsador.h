@@ -1,5 +1,5 @@
 //Declaracion de la clase pulsador
-#ifndef PULSADOR_H
+#ifndef PULSADOR_H //si ya se incluyo no se vuelve a incluir
 #define PULSADOR_H
 
 #include <Arduino.h>
@@ -19,3 +19,4 @@ public:
 
 
 #endif
+
