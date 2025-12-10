@@ -93,40 +93,49 @@ void draw() {
     float imgSize = height * 0.1;            //tamaño y posicion de la imagen
     image(miImagen, width - imgSize*4 , 20, 150, imgSize);
   }
-  
+
+//texto que indica el estado
   textSize(tamTextoNormal);
   textAlign(LEFT);
   float estadoY = graphY - 15; 
   
-  switch (estadoActual) {
+  switch (estadoActual) {  //Segun el estado, el texto que "imprime"
+
     case DESCONECTADO: fill(255, 0, 0); text("Electrodos desconectados", graphX, estadoY); break;
     case MIDIENDO:     fill(0, 150, 0); text("Midiendo señal...", graphX, estadoY); break;
     case PAUSADO:      fill(0, 0, 150); text("Visualización Pausada", graphX, estadoY); break;
     default:           fill(150, 0, 0); text("Esperando inicio...", graphX, estadoY); break;
   }
 
-  // --- DIBUJAR BOTONES ---
+  // Dibujamos los botones
   drawButton(btnX1, btnY, btnW, btnH, label1);
   drawButton(btnX2, btnY, btnW, btnH, label2);
   drawButton(btnX3, btnY, btnW, btnH, label3);
   
-  drawGraph();
+  drawGraph();  //Dibuja el grafico dl ECG
   
-  // --- MENSAJE FLOTANTE ---
-  if (millis() - tiempoMensaje < duracionMensaje) {
-    pushStyle(); 
-    rectMode(CENTER); fill(0, 0, 0, 150); noStroke();
-    rect(width / 2, height / 2, width * 0.5, height * 0.1, 15); 
-    fill(255); textSize(tamTextoNormal * 1.5); textAlign(CENTER, CENTER); 
+  // Mensajes emergentes o flotantes
+  if (millis() - tiempoMensaje < duracionMensaje) {   //Mientras el tiempo sea menor a 2,5s muestra el mensaje
+
+    pushStyle();             //Guarda el estilo gráfico actual
+    rectMode(CENTER);  //dibuja el rectangulo desde el centro
+    fill(0, 0, 0, 150);  //color de fondo
+    noStroke();  //sin bordes
+    rect(width / 2, height / 2, width * 0.5, height * 0.1, 15); //dibuja el rectangulo
+
+    //Escribe el texto dentro del rectangulo
+    fill(255);        
+    textSize(tamTextoNormal * 1.5);
+    textAlign(CENTER, CENTER);           
     text(mensajeTemporal, width / 2, height / 2);
-    popStyle(); 
+    popStyle(); //Restaura el estilo gráfico
   }
 }
 
-//
+//Botones con el mouse
 void mousePressed() {
   
-  if (mouseY > btnY && mouseY < btnY + btnH) {  
+  if (mouseY > btnY && mouseY < btnY + btnH) {   //comprueba que el clic esté en la franja vertical donde están los botones
     
     // --- BOTÓN 1: INICIAR ---
     if (mouseX > btnX1 && mouseX < btnX1 + btnW) {
@@ -365,5 +374,6 @@ void keyPressed() {
   else if (key == 'P' || key == 'p') myPort.write("P\n");
   else if (key == 'G' || key == 'g') myPort.write("G\n");
 }
+
 
 
