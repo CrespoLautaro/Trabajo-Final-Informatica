@@ -211,7 +211,7 @@ void realizarGuardadoConDatos() {
   if (resultado != null) {               //si no es null(si el usuario no cancelo)
      String infoCompleta = resultado[0];      //datos del paciente
      String nombreSolo = resultado[1];        //nombre del archivo
-     miArchivo.guardar(ecgData, infoCompleta, nombreSolo);  //Llamamos al metodo
+     miArchivo.guardar(ecgData, infoCompleta, nombreSolo);  //Llamamos al metodo del objeto
      mensajeTemporal = "Guardado: " + nombreSolo;
   } else {
      mensajeTemporal = "Guardado cancelado";
@@ -379,6 +379,7 @@ void serialEvent(Serial myPort) {
     }
   }
 }
+
 
 
 
