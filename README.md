@@ -45,7 +45,7 @@ Proceso:
 
 -Recibe los datos digitales enviados por el Arduino.
 
--Utiliza estos datos para dibujar la gráfica del ECG en tiempo real en la pantalla, moviendo la forma de onda de izquierda a derecha.
+-Utiliza estos datos para dibujar la gráfica del ECG en tiempo real en la pantalla.
 
 👤 Integrantes: 
 
