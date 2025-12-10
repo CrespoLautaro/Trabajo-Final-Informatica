@@ -131,51 +131,70 @@ void draw() {
     popStyle(); //Restaura el estilo gráfico
   }
 }
-// Funciones Principales 
-void iniciarMedicion() {
-  estadoActual = Estado.MIDIENDO;
-  ecgData.clear();                 // Limpiar datos como hace mousePressed  
-  mensajeTemporal = "Iniciando..."; 
-  tiempoMensaje = millis();
 
-  if (myPort != null) myPort.write("IM\n");  // Solo si querés que el botón se lo mande a Arduino
-}
-
-void pausarMedicion() {
-  estadoActual = Estado.PAUSADO;
-  mensajeTemporal = "Gráfico Pausado";
-  tiempoMensaje = millis();
-}
-
-void reanudarMedicion() {
-  estadoActual = Estado.MIDIENDO;
-  mensajeTemporal = "Reanudando...";
-  tiempoMensaje = millis();
-}
-
-void desconectado() {
-  estadoActual = Estado.DESCONECTADO;
-  mensajeTemporal = "¡Electrodos desconectados!";
-  tiempoMensaje = millis();
-}
-
-void guardarMedicion() {
-  realizarGuardadoConDatos();     // ya existe y está bien
+void ejecutarAccion(Estado nuevoEstado) {
+    
+    // Evita ejecutar lógica compleja si el estado no cambia
+    if (estadoActual == nuevoEstado && nuevoEstado != Estado.DESCONECTADO) {
+        return;
+    }
+           
+    switch (nuevoEstado) {
+        
+        case MIDIENDO:
+            // Envia comando de INICIO a Arduino
+            if (myPort != null) myPort.write("IM\n");
+            
+            // Limpiar datos solo si se inicia desde cero (no si se reanuda desde PAUSADO)
+            if (estadoActual == Estado.ESPERANDO || estadoActual == Estado.DESCONECTADO) { 
+                ecgData.clear();
+            }        
+            mensajeTemporal = (estadoActual == Estado.PAUSADO) ? "Reanudando Medición" : "Iniciando Medición...";
+            break;
+            
+        case PAUSADO:
+            //Envia comando de PAUSA a Arduino
+            if (myPort != null) myPort.write("P\n");           
+            mensajeTemporal = "Visualización Pausada";
+            break;
+            
+        case DESCONECTADO:
+            //El comando viene de arduino
+            mensajeTemporal = "¡Electrodos Desconectados!";
+            break;
+            
+        case ESPERANDO:
+            // Estado por defecto.
+            mensajeTemporal = "Esperando la señal de inicio...";
+            break;
+    }
+    
+    //  Aplicar el nuevo estado 
+    estadoActual = nuevoEstado;
+    tiempoMensaje = millis(); // Reiniciar el temporizador del mensaje flotante
 }
 
 //Botones  con el mouse
-void mousePressed() {
-  if (mouseX > btnX1 && mouseX < btnX1 + btnW) {
-    iniciarMedicion();
+void mousePressed() {   
+    if (mouseY > btnY && mouseY < btnY + btnH) {    // Comprueba que el clic esté en la franja vertical donde están los botones
+             if (mouseX > btnX1 && mouseX < btnX1 + btnW) {     // BOTÓN 1: INICIAR 
+             ejecutarAccion(Estado.MIDIENDO);
+        }
+
+        else if (mouseX > btnX2 && mouseX < btnX2 + btnW) {    //BOTÓN 2: PAUSAR
+            if (estadoActual == Estado.MIDIENDO) {
+                ejecutarAccion(Estado.PAUSADO);
+            } else if (estadoActual == Estado.PAUSADO) {
+                ejecutarAccion(Estado.MIDIENDO); // Reanudar
+            } }
+        else if (mouseX > btnX3 && mouseX < btnX3 + btnW) {     // BOTÓN 3: GUARDAR 
+           ejecutarAccion(Estado.PAUSADO);  // Se pausa primero para asegurar que los datos no cambien mientras se guardan
+            realizarGuardadoConDatos();
+        }
+    }
 }
-else if (mouseX > btnX2 && mouseX < btnX2 + btnW) {
-    if (estadoActual == Estado.MIDIENDO) pausarMedicion();
-    else if (estadoActual == Estado.PAUSADO) reanudarMedicion();
-}
-else if (mouseX > btnX3 && mouseX < btnX3 + btnW) {
-    guardarMedicion();
-} 
-}
+
+
 
 // --- LÓGICA DE GUARDADO ---
 void realizarGuardadoConDatos() {
@@ -321,56 +340,43 @@ void drawGraph() {
   popStyle();  
 }
 
-//COMUNICACIÓN SERIAL ---
-void serialEvent(Serial myPort) {
-  String inString = myPort.readStringUntil('\n');
-  if (inString == null) return;
-  inString = trim(inString);
+//Comunicacion serial con Arduino
 
-  // COMANDOS DE ESTADOS
-  if (inString.equals("IM")) {
-    estadoActual = Estado.MIDIENDO; 
-    ecgData.clear(); // Limpiamos al iniciar
-    mensajeTemporal = "Iniciando..."; 
-    tiempoMensaje = millis();
+void serialEvent(Serial myPort) {
+    String inString = myPort.readStringUntil('\n');
+    if (inString == null) return;
+    inString = trim(inString);
     
-  } else if (inString.equals("ED")) {
-    estadoActual = Estado.DESCONECTADO; 
-    mensajeTemporal = "¡Electrodos Desconectados!"; 
-    tiempoMensaje = millis();
-    
-  } else if (inString.equals("P")) {
-    estadoActual = Estado.PAUSADO; 
-    mensajeTemporal = "Pausado - Listo para Guardar"; 
-    tiempoMensaje = millis();
-    
-  } else if (inString.equals("G")) {
-    realizarGuardadoConDatos();
-    
- 
-  } else if (inString.startsWith("<") && inString.endsWith(">")) {
-    
+    if (inString.equals("IM")) {
+         ejecutarAccion(Estado.MIDIENDO);    //cambia de estado a Midiendo
+        
+    } else if (inString.equals("ED")) {
+        ejecutarAccion(Estado.DESCONECTADO);    //cambia de estado a Desconectado
+        
+    } else if (inString.equals("P")) {
+        ejecutarAccion(Estado.PAUSADO);    //cambia de estado a Pausado
+        
+    } else if (inString.equals("G")) {
+        // Arduino envió comando para Guardar (inicia el proceso de guardado)
+        realizarGuardadoConDatos();
+
+   //RECEPCIÓN DE DATOS ECG
+     } else if (inString.startsWith("<") && inString.endsWith(">")) {
     inString = inString.substring(1, inString.length() - 1);
     String[] values = split(inString, ',');
     ArrayList<Float> newData = new ArrayList<Float>();
-    
+   
     for (String val : values) { 
        try { 
          float valorLeido = float(val);
-         
-         // FILTRO: Invalidamos menores a 200
-         if (valorLeido < 200) {
+           if (valorLeido < 200) {  // FILTRO: Invalidamos menores a 200
            valorLeido = 200; 
          }
-         
-         
          newData.add(valorLeido); 
-         
-       } catch (Exception e) {} 
+    } catch (Exception e) {} 
     }
     
-    // Solo actualizamos si llegaron los 300 datos completos y no estamos en pausa
-    if (newData.size() == maxSamples && estadoActual != Estado.PAUSADO) {
+    if (newData.size() == maxSamples && estadoActual != Estado.PAUSADO) {    // Solo actualizamos si llegaron los 300 datos completos y no estamos en pausa
       ecgData = newData;
     }
   }
@@ -382,6 +388,7 @@ void keyPressed() {
   else if (key == 'P' || key == 'p') myPort.write("P\n");
   else if (key == 'G' || key == 'g') myPort.write("G\n");
 }
+
 
 
 
