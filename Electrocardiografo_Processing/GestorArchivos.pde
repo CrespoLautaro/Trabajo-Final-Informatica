@@ -1,4 +1,5 @@
-class GestorArchivos {
+
+class GestorArchivos {        //Definimos la clase
   
   private String nombreBase;
   
@@ -7,7 +8,7 @@ class GestorArchivos {
   }
   
 
-  public void guardar(ArrayList<Float> datos, String infoPaciente, String nombrePacienteParaArchivo) {
+  public void guardar(ArrayList<Float> datos, String infoPaciente, String nombrePacienteParaArchivo) {         //constructor
     
     if (datos.size() == 0) {
       println("No hay datos para guardar.");
@@ -38,4 +39,5 @@ class GestorArchivos {
     println("--> Archivo guardado: " + nombreArchivo);
   }
 }
+
 
