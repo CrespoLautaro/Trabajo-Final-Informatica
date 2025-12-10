@@ -211,7 +211,7 @@ void realizarGuardadoConDatos() {
   if (resultado != null) {               //si no es null(si el usuario no cancelo)
      String infoCompleta = resultado[0];      //datos del paciente
      String nombreSolo = resultado[1];        //nombre del archivo
-     miArchivo.guardar(ecgData, infoCompleta, nombreSolo);
+     miArchivo.guardar(ecgData, infoCompleta, nombreSolo);  //Llamamos al metodo
      mensajeTemporal = "Guardado: " + nombreSolo;
   } else {
      mensajeTemporal = "Guardado cancelado";
@@ -220,16 +220,18 @@ void realizarGuardadoConDatos() {
   if (estadoPrevio == Estado.MIDIENDO) estadoActual = Estado.MIDIENDO;  //Si antes estaba midiendo, sigue midiendo
 }
 
-// --- VENTANA EMERGENTE ---
+// Funcion de Ventana emergente, para pedir datos
 String[] pedirDatosPaciente() {
   JPanel panel = new JPanel();
-  panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-  
+  panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS)); //Crear el panel vertical
+
+//Creamos los campos de texto:
   JTextField nombreField = new JTextField(15);
   JTextField edadField = new JTextField(5);
   JTextField dniField = new JTextField(10);
   JTextField antecedenteField = new JTextField(20);
 
+ //Agregamos etiquetas + campos a llenar
   panel.add(new JLabel("Nombre y Apellido (Nombre de Archivo):"));
   panel.add(nombreField);
   panel.add(new JLabel("Edad:"));
@@ -239,33 +241,35 @@ String[] pedirDatosPaciente() {
   panel.add(new JLabel("Antecedentes Médicos:"));
   panel.add(antecedenteField);
 
+//Abrimos la ventana emergente
   int result = JOptionPane.showConfirmDialog(null, panel, 
-               "Guardar ECG - Datos del Paciente", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+               "Guardar ECG - Datos del Paciente", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);   //botones de ok y cancelar
 
-  if (result == JOptionPane.OK_OPTION) {
+  if (result == JOptionPane.OK_OPTION) {   //Si el usuario presiona ok
     String nombre = nombreField.getText();
-    if (nombre.trim().length() == 0) nombre = "Paciente_Sin_Nombre";
-    
+    if (nombre.trim().length() == 0) nombre = "Paciente_Sin_Nombre"; //Validamos, si el paciente no coloco nombre se pone uno
+
+//Contruccion del texto
     String info = "PACIENTE: " + nombre + "\n" +
                   "EDAD: " + edadField.getText() + "\n" +
                   "DNI: " + dniField.getText() + "\n" +
                   "ANTECEDENTES: " + antecedenteField.getText();
     
     return new String[] { info, nombre };
-  } else {
+  } else {        //si cancelo:
     return null;
   }
 }
 
-// --- FUNCIONES DE DIBUJO ---
-void drawButton(float x, float y, float w, float h, String label) {
+//  FUNCIONES DE DIBUJO
+void drawButton(float x, float y, float w, float h, String label) {  //Dibujo un boton
   pushStyle(); 
-  if (mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h) fill(200, 200, 255);
+  if (mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h) fill(200, 200, 255);  //si el mouse esta encima cambia el color
   else fill(220);
   stroke(0); 
-  rect(x, y, w, h, 10);
+  rect(x, y, w, h, 10);     //dibuja el rectangulo del boton sin bordes
   fill(0); 
-  textSize(tamTextoNormal); 
+  textSize(tamTextoNormal);  //texto del boton
   textAlign(CENTER, CENTER);
   text(label, x + w/2, y + h/2);
   popStyle(); 
@@ -333,11 +337,12 @@ void drawGraph() {
   popStyle();  
 }
 
+
 //Comunicacion serial con Arduino
 
 void serialEvent(Serial myPort) {
-    String inString = myPort.readStringUntil('\n');
-    if (inString == null) return;
+    String inString = myPort.readStringUntil('\n');  //cada vez que Arduino envía algo terminado en \n
+    if (inString == null) return;   //Leemos la linea
     inString = trim(inString);
     
     if (inString.equals("IM")) {
@@ -354,15 +359,15 @@ void serialEvent(Serial myPort) {
         realizarGuardadoConDatos();
 
    //RECEPCIÓN DE DATOS ECG
-     } else if (inString.startsWith("<") && inString.endsWith(">")) {
-    inString = inString.substring(1, inString.length() - 1);
-    String[] values = split(inString, ',');
+     } else if (inString.startsWith("<") && inString.endsWith(">")) {     //Los datos vienen con la forma: <512,520,530, ... , 490>
+    inString = inString.substring(1, inString.length() - 1);             //Le quitamos < >
+    String[] values = split(inString, ',');                              //Y los separamos con una coma
     ArrayList<Float> newData = new ArrayList<Float>();
    
     for (String val : values) { 
        try { 
          float valorLeido = float(val);
-           if (valorLeido < 200) {  // FILTRO: Invalidamos menores a 200
+           if (valorLeido < 200) {              // FILTRO: Invalidamos menores a 200 (valores anormales)
            valorLeido = 200; 
          }
          newData.add(valorLeido); 
@@ -374,14 +379,6 @@ void serialEvent(Serial myPort) {
     }
   }
 }
-
-void keyPressed() {
-  if (myPort == null) return;
-  if (key == 'M' || key == 'm') myPort.write("IM\n");
-  else if (key == 'P' || key == 'p') myPort.write("P\n");
-  else if (key == 'G' || key == 'g') myPort.write("G\n");
-}
-
 
 
 
