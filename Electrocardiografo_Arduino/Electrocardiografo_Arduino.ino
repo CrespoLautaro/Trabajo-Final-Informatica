@@ -28,7 +28,8 @@ Estado estadoActual = INICIO;
 void setup() {
   Serial.begin(9600);
   inputString.reserve(200); //Reservamos memoria
-  
+
+  //inicializo los objetos
   btnInicio.inicializar();
   btnPausa.inicializar();
   btnGuardar.inicializar();
@@ -48,7 +49,7 @@ void loop() {
     stringComplete = false;
   }
 
-  // CÓDIGO LIMPIO GRACIAS A LA LIBRERÍA
+  // Cambio de estados
   if (btnInicio.fuePresionado()) estadoActual = INICIO_MEDICION;
   if (btnPausa.fuePresionado()) estadoActual = PAUSAR_MEDICION;
   if (btnGuardar.fuePresionado()) estadoActual = GUARDAR_MEDICION;
