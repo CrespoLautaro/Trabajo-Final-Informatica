@@ -1,5 +1,5 @@
 import processing.serial.*;
-import javax.swing.*; 
+import javax.swing.*; //libreria de java para ventanas emergentes
 
 // Usamos libreria propia
 GestorArchivos miArchivo; 
@@ -363,3 +363,4 @@ void keyPressed() {
   else if (key == 'P' || key == 'p') myPort.write("P\n");
   else if (key == 'G' || key == 'g') myPort.write("G\n");
 }
+
