@@ -54,5 +54,6 @@ Proceso:
 -Crespo Lautaro
 
 ![sddefault](https://github.com/user-attachments/assets/9c469f0e-1dd4-4b16-af0d-0d46659e5386)
+![WhatsApp Image 2025-12-02 at 18 06 44](https://github.com/user-attachments/assets/e1ac4c1a-42e8-4c8c-b598-6e891f1b0d87)
 
 
