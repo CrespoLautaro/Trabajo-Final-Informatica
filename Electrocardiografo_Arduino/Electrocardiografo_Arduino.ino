@@ -27,7 +27,7 @@ Estado estadoActual = INICIO;
 
 void setup() {
   Serial.begin(9600);
-  inputString.reserve(200);
+  inputString.reserve(200); //Reservamos memoria
   
   btnInicio.inicializar();
   btnPausa.inicializar();
