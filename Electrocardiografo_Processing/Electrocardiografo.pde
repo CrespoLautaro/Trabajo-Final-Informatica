@@ -196,21 +196,16 @@ void mousePressed() {
 
 
 
-// --- LÓGICA DE GUARDADO ---
+// Funcion de Guardado
 void realizarGuardadoConDatos() {
-  // 1. VALIDACIÓN
-  if (ecgData == null || ecgData.size() == 0) {
+  if (ecgData == null || ecgData.size() == 0) {     // Validamos si hay datos
     mensajeTemporal = "¡No hay datos para guardar!";
     tiempoMensaje = millis();
     return; 
   }
-
-  // 2. PAUSA
-  Estado estadoPrevio = estadoActual;
+  Estado estadoPrevio = estadoActual;  //Si hay datos pausamos la medicion
   estadoActual = Estado.PAUSADO; 
-  
-  // 3. VENTANA
-  String[] resultado = pedirDatosPaciente();
+  String[] resultado = pedirDatosPaciente();   //Pedimos los datos del paciente, abriendo una ventana
   
   if (resultado != null) {
      String infoCompleta = resultado[0];
@@ -220,11 +215,8 @@ void realizarGuardadoConDatos() {
   } else {
      mensajeTemporal = "Guardado cancelado";
   }
-  
-  tiempoMensaje = millis();
-  
-  // 4. REACTIVACIÓN AUTOMÁTICA (Si estaba midiendo antes)
-  if (estadoPrevio == Estado.MIDIENDO) estadoActual = Estado.MIDIENDO;
+    tiempoMensaje = millis(); 
+  if (estadoPrevio == Estado.MIDIENDO) estadoActual = Estado.MIDIENDO;  //Si antes estaba midiendo, sigue midiendo
 }
 
 // --- VENTANA EMERGENTE ---
@@ -388,6 +380,7 @@ void keyPressed() {
   else if (key == 'P' || key == 'p') myPort.write("P\n");
   else if (key == 'G' || key == 'g') myPort.write("G\n");
 }
+
 
 
 
