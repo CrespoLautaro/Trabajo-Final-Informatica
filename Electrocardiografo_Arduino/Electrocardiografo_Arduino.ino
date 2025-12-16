@@ -17,11 +17,11 @@ int ECG_Almacenamiento[TAM_DE_MEMORIA];
 int Posicion = 0;
 String inputString = "";
 boolean stringComplete = false;
-float Retardo_medicion = 4; 
-float TiempoAnterior = 0;
+unsigned long Retardo_medicion = 15; 
+unsigned long TiempoAnterior = 0;
 
 enum Estado {
-  INICIO_MEDICION, PAUSAR_MEDICION, GUARDAR_MEDICION, MIDIENDO_ACTIVA, INICIO
+   INICIO, MEDICION, PAUSAR_MEDICION, GUARDAR_MEDICION
 };
 Estado estadoActual = INICIO;
 
@@ -42,7 +42,7 @@ void setup() {
 //Lectura de comandos seriales
 void loop() {
   if (stringComplete) {
-    if (inputString == "IM") estadoActual = INICIO_MEDICION;
+    if (inputString == "IM") estadoActual = MEDICION;
     else if (inputString == "P") estadoActual = PAUSAR_MEDICION;
     else if (inputString == "G") estadoActual = GUARDAR_MEDICION;
     inputString = "";
@@ -50,38 +50,30 @@ void loop() {
   }
 
   // Cambio de estados
-  if (btnInicio.fuePresionado()) estadoActual = INICIO_MEDICION;
+  if (btnInicio.fuePresionado()) {
+    Serial.println("IM");
+    Posicion= 0;
+    estadoActual = MEDICION;
+    }
   if (btnPausa.fuePresionado()) estadoActual = PAUSAR_MEDICION;
   if (btnGuardar.fuePresionado()) estadoActual = GUARDAR_MEDICION;
 
-  // Lógica de Tiempos y Estados
-  float TiempoActual = millis();
-  if (TiempoActual - TiempoAnterior >= Retardo_medicion) {
-    TiempoAnterior = TiempoActual;
+unsigned long TiempoActual = millis();
 
     switch (estadoActual) {
-      case INICIO_MEDICION:
-        if (digitalRead(LOMENOS) == HIGH || digitalRead(LOMAS) == HIGH) {
-          Serial.println("ED");
-          estadoActual = INICIO; 
-        } else {
-          Serial.println("IM");
-          Posicion = 0; 
-          estadoActual = MIDIENDO_ACTIVA; 
-        }
-        break;
+      case MEDICION:
+        if (TiempoActual - TiempoAnterior >= Retardo_medicion) {
+        TiempoAnterior = TiempoActual;
 
-      case MIDIENDO_ACTIVA:
         if (digitalRead(LOMENOS) == HIGH || digitalRead(LOMAS) == HIGH) {
           Serial.println("ED");
-          estadoActual = INICIO; 
+          estadoActual = INICIO;
         } else {
-          int Medicion = analogRead(SIGNAL);
-          ECG_Almacenamiento[Posicion] = Medicion; // Guardamos la medición en el buffer
+          ECG_Almacenamiento[Posicion] = analogRead(SIGNAL);
           Posicion++;
-          
+
           if (Posicion >= TAM_DE_MEMORIA) {
-            Serial.print('<');  // Enviamos todo en formato <v1,v2,v3,...>
+            Serial.print('<');
             for (int i = 0; i < TAM_DE_MEMORIA; i++) {
               Serial.print(ECG_Almacenamiento[i]);
               if (i < TAM_DE_MEMORIA - 1) Serial.print(',');
@@ -90,18 +82,22 @@ void loop() {
             Posicion = 0;
           }
         }
-        break;
+      }
+      break;
 
       case PAUSAR_MEDICION:
-        Posicion = 0; Serial.println("P"); estadoActual = INICIO; 
+        Posicion = 0;
+        Serial.println("P");
+        estadoActual = INICIO; 
         break;
 
       case GUARDAR_MEDICION:
-        Serial.println("G"); estadoActual = INICIO; 
+        Serial.println("G");
+        estadoActual = INICIO; 
         break;
       
       default: break;
-    }
+    
   }
 }
 
