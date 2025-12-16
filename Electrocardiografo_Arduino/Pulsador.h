@@ -8,7 +8,8 @@ class Pulsador {
 private:
 	int pin;
 	int ultimoEstado;  //high o low
-	
+	unsigned long ultimoTiempo; 
+  const unsigned long retardoantirrebote = 50;
 public:
 	// Constructor(mismo nombre)
 	Pulsador(int p);
@@ -19,6 +20,3 @@ public:
 
 
 #endif
-
-
-
