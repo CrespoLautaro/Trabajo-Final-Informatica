@@ -9,7 +9,7 @@ Pulsador::Pulsador(int p) {     //de la forma, Clase::constructor
 // Configuracion del pin
 void Pulsador::inicializar() {   
     pinMode(pin, INPUT_PULLUP); 
-    ultimoEstado = HIGH;        
+    ultimoEstado = digitalRead(pin);        
 }
 // Logica del boton
 bool Pulsador::fuePresionado() {
@@ -25,5 +25,6 @@ bool Pulsador::fuePresionado() {
 	return resultado;
 
 }
+
 
 
