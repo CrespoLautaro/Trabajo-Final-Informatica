@@ -1,6 +1,5 @@
 #include "Pulsador.h"
-unsigned long ultimoTiempo;
-  const unsigned long debounce = 30;
+
 // Constructor
 Pulsador::Pulsador(int p) {     //de la forma, Clase::constructor
 	pin = p;
@@ -30,3 +29,4 @@ bool Pulsador::fuePresionado() {
 	return resultado;
 
 }
+
