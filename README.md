@@ -22,8 +22,6 @@ Implementar una cadena de adquisición de datos biométricos que permita captura
 
 3 Pulsadores.
 
-3 Resistencias de 10K Ohms.
-
 
 💻 Software y Flujo de Trabajo: 
 
